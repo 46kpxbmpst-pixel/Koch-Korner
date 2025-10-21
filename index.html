@@ -3,28 +3,214 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dein Kochbuch – HTML (Dark Mode)</title>
-  <!-- Tailwind Play CDN, damit die bestehenden Klassen funktionieren -->
+  <title>Dein Kochbuch – HTML (Auto-Kategorien)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
     .shrinkable { transition: transform 200ms ease, padding 200ms ease; }
     .shrink { transform: scale(0.95) translateY(-4px); }
+
+    /* --- Modern Recipe Detail (nur Styling) --- */
+    .glass {
+      background: rgba(20,20,20,.55);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .step-list li {
+      padding: .75rem 1rem;
+      border-radius: .75rem;
+      background: rgba(255,255,255,.03);
+      border: 1px solid rgba(255,255,255,.06);
+    }
+    .meta-chip {
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.12);
+    }
   </style>
 </head>
 <body class="min-h-screen bg-neutral-950 text-neutral-100">
   <div id="app"></div>
 
   <script>
-    // --- Dummy-Daten (wie im React-Code) ---
-    const CATEGORIES = [
-      "Pasta","Vegan","Vegetarisch","Fleisch","Fisch","Suppe","Dessert","Frühstück","Salat","Schnell & Easy",
-    ];
-
+    // --- Daten ---
     const RECIPES = [
       { id: "r1", title: "Cremige Tomaten-Pasta", categories: ["Pasta","Vegetarisch","Schnell & Easy"], ingredients: ["Pasta","Tomate","Sahne","Basilikum","Knoblauch"], image: "https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=1600&auto=format&fit=crop", time: 20, portions: 2, steps: ["Pasta in Salzwasser kochen.","Knoblauch anrösten, mit Tomaten und Sahne ablöschen.","Mit Salz, Pfeffer und Basilikum abschmecken.","Mit Pasta vermengen und servieren."] },
       { id: "r2", title: "Zitronen-Lachs vom Blech", categories: ["Fisch","Schnell & Easy"], ingredients: ["Lachs","Zitrone","Olivenöl","Knoblauch","Kartoffeln"], image: "https://images.unsplash.com/photo-1615937691194-97dbd3f30b54?q=80&w=1600&auto=format&fit=crop", time: 30, portions: 2, steps: ["Backofen auf 200°C vorheizen.","Kartoffeln vorschneiden und auf Blech geben.","Lachs mit Zitrone, Öl, Salz & Pfeffer würzen und aufs Blech legen.","Alles gemeinsam backen bis gar."] },
       { id: "r3", title: "Fluffige Pfannkuchen", categories: ["Frühstück","Dessert","Vegetarisch"], ingredients: ["Mehl","Milch","Ei","Backpulver","Zucker"], image: "https://images.unsplash.com/photo-1495214783159-3503fd1b572d?q=80&w=1600&auto=format&fit=crop", time: 15, portions: 3, steps: ["Teig anrühren (Mehl, Milch, Ei, Backpulver, Zucker).","In Pfanne portionsweise ausbacken.","Mit Ahornsirup oder Beeren servieren."] },
+      { id: "r4", title: "Original Bolognese (Ragù alla Bolognese)", categories: ["Pasta","Fleisch"], ingredients: ["300 g Rinderhackfleisch (am besten aus Bauchlappen oder Hüfte)","150 g Pancetta (durchwachsener Speck, fein gehackt)","50 g Karotte (fein gewürfelt)","50 g Sellerie (fein gewürfelt)","50 g Zwiebel (fein gewürfelt)","5 EL Tomatenmark (oder passierte Tomaten)","½ Glas trockener Weißwein","½ Glas Vollmilch","etwas Fleischbrühe (nach Bedarf)","Salz & Pfeffer","Butter oder Olivenöl (traditionell eher Butter)"], image: "https://images.unsplash.com/photo-1613145993488-5e2b60f02d9a?q=80&w=1600&auto=format&fit=crop", time: 150, portions: 4, steps: ["Speck auslassen – Butter in einem schweren Topf zerlassen, den fein gehackten Pancetta langsam auslassen.","Soffritto – Zwiebel, Karotte und Sellerie dazugeben, sanft anschwitzen, bis das Gemüse weich und leicht goldgelb ist.","Fleisch – Rinderhack dazugeben, krümelig anbraten, bis es seine Farbe verliert.","Ablöschen – Mit Weißwein ablöschen und vollständig verdampfen lassen.","Tomate – Tomatenmark einrühren.","Schmoren – Ein wenig Brühe angießen, Hitze stark reduzieren und mindestens 2 Stunden sanft köcheln lassen. Immer wieder etwas Brühe nachgießen, wenn es zu trocken wird.","Milch – Gegen Ende die Milch unterrühren, damit die Sauce milder und cremiger wird.","Abschmecken – Mit Salz und Pfeffer würzen."] },
+
+      // --- Eingebundene Rezepte aus deiner Liste ---
+      { id: "r5", title: "Hackfleisch-Sauerkrautsuppe", categories: ["Suppe","Fleisch","Gemüse & Herzhaftes"], ingredients: [
+        "2 große Zwiebeln","250 g Hackfleisch","2–3 Gewürzgurken","3 gehäufte EL Sauerkraut","3 EL Tomatenmark","1 Liter Gemüse- oder Fleischbrühe","Salz und Pfeffer","Petersilie oder Schnittlauch zum Verfeinern",
+        "Dip: ½ Becher saure Sahne","Dip: 2–3 EL Mayonnaise","Dip: 1–2 Knoblauchzehen","Dip: 1 TL Senf","Dip: Salz und Pfeffer"
+      ], image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?q=80&w=1600&auto=format&fit=crop", time: 90, portions: 4, steps: [
+        "Zwiebeln und Hackfleisch in einem Topf anbraten. Mit Brühe ablöschen und aufkochen.",
+        "Gewürzgurken, Tomatenmark und Sauerkraut hinzufügen. Ca. 1–2 Stunden köcheln lassen.",
+        "Mit Salz, Pfeffer und Kräutern abschmecken.",
+        "Für den Dip saure Sahne, Mayonnaise, Knoblauch und Senf verrühren. Mit Salz und Pfeffer würzen und zur Suppe servieren."
+      ] },
+
+      { id: "r6", title: "Römische Zucchini", categories: ["Gemüse & Herzhaftes","Backofen","Fleisch"], ingredients: [
+        "50 g Speckwürfel","1 EL Öl","1 Zwiebel","1 Knoblauchzehe","500 g Tomatensoße","1 EL Oregano","Salz und Pfeffer","500 g Zucchini","2 EL Semmelmehl","4–5 EL gehackte Kräuter (Petersilie, Oregano, Rosmarin)","40 g Parmesan","6 EL Sahne oder Crème fraîche"
+      ], image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=1600&auto=format&fit=crop", time: 50, portions: 3, steps: [
+        "Speck in Öl anbraten, Zwiebel und Knoblauch zufügen und kurz andünsten.",
+        "Tomatensoße, Oregano, Salz und Pfeffer zugeben, einköcheln lassen, in eine Auflaufform füllen.",
+        "Zucchini längs halbieren, leicht salzen.",
+        "Semmelmehl, Kräuter, Parmesan und Sahne zu einer Paste verrühren und auf die Zucchini streichen.",
+        "In der Soße bei 230 °C ca. 25 Minuten backen."
+      ] },
+
+      { id: "r7", title: "Grüne Bohnen mit Knoblauch", categories: ["Gemüse & Herzhaftes","Vegetarisch","Schnell & Easy"], ingredients: [
+        "750 g grüne Bohnen","150 g Crème fraîche","2 Knoblauchzehen","1 EL Petersilie","Salz und Pfeffer"
+      ], image: "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?q=80&w=1600&auto=format&fit=crop", time: 30, portions: 4, steps: [
+        "Bohnen abfädeln, waschen, in Stücke schneiden und 15 Minuten in Salzwasser garen.",
+        "Crème fraîche erhitzen, Knoblauch pressen, Petersilie zufügen.",
+        "Mit Salz und Pfeffer würzen, Bohnen untermengen und kurz erhitzen."
+      ] },
+
+      { id: "r8", title: "Kohlrabi in Kresse-Creme", categories: ["Gemüse & Herzhaftes","Vegetarisch","Schnell & Easy"], ingredients: [
+        "1 kg Kohlrabi (mit Herzblättern)","150 g Crème fraîche","3 EL Kresse","Salz, Pfeffer, Muskat","Etwas Zitronensaft"
+      ], image: "https://images.unsplash.com/photo-1505577058444-a3dab90d4253?q=80&w=1600&auto=format&fit=crop", time: 30, portions: 4, steps: [
+        "Kohlrabi schälen, in Stifte schneiden. Herzblätter fein schneiden.",
+        "In Salzwasser 8–10 Minuten garen, abgießen.",
+        "Crème fraîche erhitzen, Kresse und Gewürze einrühren.",
+        "Kohlrabi hinzufügen, abschmecken und servieren."
+      ] },
+
+      { id: "r9", title: "Bandnudeln mit Spinat-Sahne", categories: ["Pasta","Vegetarisch","Schnell & Easy"], ingredients: [
+        "500 g Blattspinat (frisch oder TK)","1 kleine Zwiebel","1 Knoblauchzehe","400 g Bandnudeln","1 EL Öl","1 EL Pinienkerne (optional)","200 g Sahne","Salz und Pfeffer","2 EL Parmesan"
+      ], image: "https://images.unsplash.com/photo-1522184216316-0b0a99e3184b?q=80&w=1600&auto=format&fit=crop", time: 30, portions: 3, steps: [
+        "Spinat putzen. Nudeln in Salzwasser kochen.",
+        "Zwiebel und Knoblauch in Öl glasig dünsten.",
+        "Spinat und Pinienkerne zugeben, kurz mitdünsten.",
+        "Sahne hinzufügen, würzen und cremig einkochen.",
+        "Nudeln abgießen, unterheben, mit Parmesan servieren."
+      ] },
+
+      { id: "r10", title: "Chili con Carne", categories: ["Fleisch","Eintopf"], ingredients: [
+        "500 g Hackfleisch","500 ml passierte Tomaten","2 rote Paprika","2 große Zwiebeln","1 Dose Mais","2 Dosen Kidneybohnen","1 Packung Chili-Gewürzmischung","Salz, Pfeffer, Zucker oder Ketchup","Öl zum Braten"
+      ], image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=1600&auto=format&fit=crop", time: 60, portions: 4, steps: [
+        "Hackfleisch in Öl anbraten.",
+        "Zwiebeln und Paprika zufügen, würzen.",
+        "Tomaten, Bohnen und Gewürze zugeben, 30–40 Minuten köcheln lassen.",
+        "Mit Zucker oder Ketchup abschmecken, Mais kurz unterrühren."
+      ] },
+
+      { id: "r11", title: "Partybrötchen", categories: ["Snack","Backofen"], ingredients: [
+        "1 Packung Brötchen (6 Stück)","2 Becher Schmand","1 Tüte geriebener Käse","Belag nach Geschmack: Salami, Schinken, Pilze, Ananas, Paprika, Zwiebeln"
+      ], image: "https://images.unsplash.com/photo-1516685018646-549198525c1b?q=80&w=1600&auto=format&fit=crop", time: 25, portions: 6, steps: [
+        "Schmand mit Käse und Zutaten mischen.",
+        "Auf Brötchenhälften streichen.",
+        "Bei 180 °C ca. 15 Minuten goldbraun backen."
+      ] },
+
+      { id: "r12", title: "Gedeckte Apfeltorte", categories: ["Kuchen & Torten","Dessert","Backen","Vegetarisch"], ingredients: [
+        "Teig: 150 g Margarine","150 g Zucker","1 Ei","2 TL Backpulver","1 Päckchen Vanillezucker","300 g Mehl",
+        "Füllung: ca. 1 kg Äpfel","1 Prise Zimt"
+      ], image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1600&auto=format&fit=crop", time: 95, portions: 12, steps: [
+        "Äpfel schälen, entkernen, würfeln und mit Zimt mischen.",
+        "Zutaten für den Teig verkneten.",
+        "⅔ Teig in Springform geben, Boden & Rand formen.",
+        "Äpfel einfüllen, restlichen Teig ausrollen und als Deckel auflegen.",
+        "Bei 175 °C Umluft ca. 70 Minuten backen."
+      ] },
+
+      { id: "r13", title: "Buttermilchschnitten", categories: ["Kuchen & Torten","Dessert","Backen"], ingredients: [
+        "Teig: 3 Eier","3 Tassen Zucker (nach Geschmack reduzieren)","1 Päckchen Vanillezucker","4 Tassen Mehl","1 Päckchen Backpulver","2 Tassen Buttermilch",
+        "Belag: 2 Tassen Kokosflocken","½ Tasse Zucker",
+        "Guss: 200 g Sahne","150 g Butter"
+      ], image: "https://images.unsplash.com/photo-1542826438-82f4d1f6086b?q=80&w=1600&auto=format&fit=crop", time: 40, portions: 20, steps: [
+        "Eier, Zucker, Vanillezucker verrühren. Mehl, Backpulver, Buttermilch zugeben.",
+        "Auf Blech geben, mit Kokos-Zucker-Mischung bestreuen.",
+        "Bei 180 °C ca. 20 Minuten backen.",
+        "Guss aus Sahne und Butter kochen und über den heißen Kuchen gießen."
+      ] },
+
+      { id: "r14", title: "Käsekuchen (Opa)", categories: ["Kuchen & Torten","Dessert","Backen"], ingredients: [
+        "Teig: 250 g Mehl","125 g Butter","30 g Zucker","1 Eigelb","1 Messerspitze Salz","2 EL Wasser",
+        "Füllung: 750 g Quark (halb Mager-, halb Vollfettquark)","½ Tasse Öl","300 g Zucker","3 Eigelb","40 g Speisestärke","1 Päckchen Vanillezucker","⅛ l Milch","3–4 Eiweiß"
+      ], image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=1600&auto=format&fit=crop", time: 150, portions: 12, steps: [
+        "Teigzutaten verkneten, 1 Stunde kalt stellen.",
+        "Quarkmasse anrühren, Eiweiß steif schlagen und unterheben.",
+        "Teig ausrollen, Form auskleiden, Füllung einfüllen.",
+        "Bei 180 °C ca. 50–60 Minuten backen.",
+        "Im ausgeschalteten Ofen abkühlen lassen."
+      ] },
+
+      { id: "r15", title: "Johannisbeerkuchen", categories: ["Kuchen & Torten","Dessert","Backen"], ingredients: [
+        "Boden: 4 Eier","125 g Zucker","180 g Mehl","9 EL Öl","½ Päckchen Backpulver",
+        "Belag: Johannisbeeren nach Belieben","2 Becher Crème fraîche","1 Päckchen Vanillezucker","2 Beutel Sahnesteif","60 g Puderzucker"
+      ], image: "https://images.unsplash.com/photo-1490323948794-cc6dde6e8e2a?q=80&w=1600&auto=format&fit=crop", time: 55, portions: 12, steps: [
+        "Teigzutaten verrühren, in gefettete Form geben.",
+        "Bei 175 °C ca. 30 Minuten backen, abkühlen lassen.",
+        "Crème fraîche mit Vanillezucker, Sahnesteif, Puderzucker verrühren.",
+        "Johannisbeeren unterheben und auf dem Boden verteilen."
+      ] },
+
+      { id: "r16", title: "Streuselkuchen", categories: ["Kuchen & Torten","Dessert","Backen","Hefe"], ingredients: [
+        "Hefeteig: 1 Würfel Hefe","500 g Mehl","¼ l Milch","125 g Margarine","125 g Zucker","1 Prise Salz","1 Ei",
+        "Streusel: 200 g Mehl","200 g Zucker","100 g Mondamin (oder Mehl)","200 g Butter","1 Prise Salz","1 Prise Zimt"
+      ], image: "https://images.unsplash.com/photo-1523986371872-9d3ba2e2f642?q=80&w=1600&auto=format&fit=crop", time: 90, portions: 20, steps: [
+        "Mehl in Schüssel geben, Vertiefung formen. Hefe in Milch mit Zucker auflösen, hineingeben, 15 Minuten gehen lassen.",
+        "Restliche Zutaten einarbeiten, 15 Minuten gehen lassen.",
+        "Streuselzutaten verkneten.",
+        "Teig auf Blech ausrollen, ggf. mit Obst belegen, Streusel darüber.",
+        "Bei 180 °C ca. 30 Minuten backen."
+      ] },
+
+      { id: "r17", title: "Marmorkuchen", categories: ["Kuchen & Torten","Dessert","Backen"], ingredients: [
+        "250 g Butter","250 g Zucker","4 Eier","350 g Mehl","1 Päckchen Backpulver","1 Päckchen Vanillezucker","1 EL Rum","250 ml Milch","3 EL Kakao","Puderzucker"
+      ], image: "https://images.unsplash.com/photo-1505259839540-04105c3d63be?q=80&w=1600&auto=format&fit=crop", time: 80, portions: 12, steps: [
+        "Butter, Zucker, Vanillezucker und Rum schaumig rühren.",
+        "Eier einzeln zugeben, Mehl und Backpulver mit Milch abwechselnd einrühren.",
+        "Teig halbieren, eine Hälfte mit Kakao mischen.",
+        "Hellen und dunklen Teig abwechselnd in Form geben, marmorieren.",
+        "Bei 175 °C ca. 60 Minuten backen, abkühlen lassen, mit Puderzucker bestreuen."
+      ] },
+
+      { id: "r18", title: "Stachelbeertorte (nach Oma Wüst)", categories: ["Kuchen & Torten","Dessert","Backen"], ingredients: [
+        "Boden: 100 g Butter","100 g Zucker","1 Päckchen Vanillezucker","4 Eigelb","1 TL Backpulver","125 g Mehl",
+        "Deckel: 4 Eiweiß","150 g Zucker","100 g gehobelte Mandeln",
+        "Füllung: 330 g Stachelbeeren (Glas)","1 Tortenguss klar","500 ml Sahne","2 Päckchen Vanillezucker","2 Päckchen Sahnesteif"
+      ], image: "https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?q=80&w=1600&auto=format&fit=crop", time: 135, portions: 12, steps: [
+        "Butter, Zucker, Vanillezucker cremig rühren, Eigelb zugeben, Mehl und Backpulver einarbeiten.",
+        "Auf 2 Formen verteilen.",
+        "Eiweiß mit Zucker steif schlagen, aufstreichen, Mandeln daraufgeben.",
+        "Bei 175 °C ca. 30 Minuten backen.",
+        "Einen Boden mit Stachelbeeren und Tortenguss belegen, Sahne aufschlagen und daraufgeben.",
+        "Zweiten Boden in Stücke schneiden und als Deckel auflegen."
+      ] }
     ];
+
+    // --- Auto-Kategorien ---
+    const MEAT = ["hähnchen","huhn","rind","schwein","lamm","speck","hackfleisch","wurst","pute","truthahn"];
+    const FISH = ["lachs","thunfisch","forelle","fisch","garnelen","shrimp","krabben","seelachs","kabeljau"];
+    const DAIRY_EGGS = ["milch","käse","sahne","butter","joghurt","quark","rahm","ei","eier"];
+
+    function ensureRecipeCategories(recipe){
+      const cats = new Set(recipe.categories || []);
+      const text = (recipe.title + " " + recipe.ingredients.join(" ")).toLowerCase();
+      if (Number(recipe.time) <= 30) cats.add("Schnell & Easy");
+      if (FISH.some(w => text.includes(w))) cats.add("Fisch");
+      if (MEAT.some(w => text.includes(w))) cats.add("Fleisch");
+      if (/(pasta|spaghetti|penne|rigatoni|fusilli)/.test(text)) cats.add("Pasta");
+      if (/salat/.test(text)) cats.add("Salat");
+      if (/(pfannkuchen|pancake|waffel|müsli|porridge|omelett)/.test(text)) cats.add("Frühstück");
+      if (/(kuchen|torte|brownie|dessert|nachspeise|pudding)/.test(text)) cats.add("Dessert");
+      const hasFish = cats.has("Fisch");
+      const hasMeat = cats.has("Fleisch");
+      if (!hasFish && !hasMeat) cats.add("Vegetarisch");
+      const hasDairyOrEggs = DAIRY_EGGS.some(w => text.includes(w));
+      if (!hasFish && !hasMeat && !hasDairyOrEggs) cats.add("Vegan");
+      return Array.from(cats);
+    }
+
+    const ENRICHED_RECIPES = RECIPES.map(r => ({ ...r, categories: ensureRecipeCategories(r) }));
+    function deriveCategoryPool(recipes){
+      const set = new Set();
+      recipes.forEach(r => (r.categories || []).forEach(c => set.add(c)));
+      return Array.from(set).sort((a,b)=>a.localeCompare(b,'de'));
+    }
+    let CATEGORIES = deriveCategoryPool(ENRICHED_RECIPES);
 
     // --- State ---
     let query = "";
@@ -34,14 +220,14 @@
     // --- Helpers ---
     function filterRecipes(q, cats) {
       const s = (q || "").trim().toLowerCase();
-      return RECIPES.filter(r => {
+      return ENRICHED_RECIPES.filter(r => {
         const matchesQuery = !s || r.title.toLowerCase().includes(s) || r.ingredients.join(" ").toLowerCase().includes(s) || r.categories.join(" ").toLowerCase().includes(s);
         const matchesCats = cats.length === 0 || cats.every(c => r.categories.includes(c));
         return matchesQuery && matchesCats;
       });
     }
 
-    function escapeHtml(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+    function escapeHtml(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');}
 
     // --- Rendering ---
     function renderApp(){
@@ -55,7 +241,7 @@
       const filtered = filterRecipes(query, activeCats);
       return `
         <div class="min-h-screen">
-          <!-- HERO: wie React-Version (kleiner) -->
+          <!-- HERO -->
           <section class="relative h-[50vh] min-h-[360px] w-full">
             <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2400&auto=format&fit=crop" alt="Hero" class="absolute inset-0 h-full w-full object-cover" />
             <div class="absolute inset-0 bg-black/40"></div>
@@ -70,7 +256,7 @@
                 </div>
               </div>
 
-              <!-- Kategorien direkt unter der Suche -->
+              <!-- Kategorien (aus Rezepten abgeleitet) -->
               <div class="mt-4 z-20">
                 <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-2 px-4">
                   ${CATEGORIES.map(c=>{
@@ -89,7 +275,7 @@
               ${showResults? `<p class="text-sm text-neutral-400">${filtered.length} Rezept${filtered.length===1? '':'e'} gefunden</p>`: ''}
             </div>
             <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              ${(showResults? filtered: RECIPES).map(r=>renderCard(r)).join('')}
+              ${(showResults? filtered: ENRICHED_RECIPES).map(r=>renderCard(r)).join('')}
             </div>
           </main>
 
@@ -124,31 +310,68 @@
         </article>`;
     }
 
+    // *** Modernisierte Detail-Ansicht ***
     function renderDetail(recipe){
       return `
         <div class="min-h-screen">
-          <div class="relative h-[38vh] min-h-[300px] w-full">
+          <div class="relative h-[46vh] min-h-[340px] w-full">
             <img src="${recipe.image}" alt="${escapeHtml(recipe.title)}" class="absolute inset-0 h-full w-full object-cover" />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent"></div>
-            <button id="backBtn" class="absolute left-4 top-4 rounded-full bg-neutral-900/70 px-4 py-2 text-sm font-medium text-neutral-100 shadow backdrop-blur hover:bg-neutral-900">← Zur Übersicht</button>
+            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
+            <button id="backBtn" class="absolute left-4 top-4 rounded-full glass px-4 py-2 text-sm font-medium text-neutral-100 shadow hover:bg-neutral-900/80">← Zur Übersicht</button>
+            <div class="absolute inset-x-0 -bottom-10 mx-auto w-full max-w-4xl px-4">
+              <div class="glass rounded-2xl p-5 ring-1 ring-white/15 shadow-xl">
+                <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+                  <div>
+                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">${escapeHtml(recipe.title)}</h1>
+                    <div class="mt-2 flex flex-wrap items-center gap-2">
+                      <span class="meta-chip rounded-full px-3 py-1 text-xs md:text-sm text-neutral-100">⏱️ ${recipe.time} Min</span>
+                      <span class="meta-chip rounded-full px-3 py-1 text-xs md:text-sm text-neutral-100">🍽️ ${recipe.portions} Portion${recipe.portions===1?'':'en'}</span>
+                      ${recipe.categories.slice(0,4).map(c=>`<span class="meta-chip rounded-full px-3 py-1 text-xs md:text-sm text-neutral-200">${escapeHtml(c)}</span>`).join('')}
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <span class="hidden md:inline text-neutral-300 text-sm">Guten Appetit!</span>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="mx-auto w-full max-w-3xl px-4 py-6">
-            <h1 class="mb-2 text-2xl font-extrabold tracking-tight md:text-3xl">${escapeHtml(recipe.title)}</h1>
-            <p class="text-neutral-400">${recipe.time} Minuten • ${recipe.portions} Portionen</p>
-          </div>
-          <div class="mx-auto grid w-full max-w-5xl gap-6 px-4 pb-24 md:grid-cols-5">
-            <section class="md:col-span-2">
-              <h2 class="mb-3 text-lg font-semibold">Zutaten</h2>
-              <ul class="list-disc space-y-2 pl-5 text-neutral-200">
-                ${recipe.ingredients.map(ing=>`<li>${escapeHtml(ing)}</li>`).join('')}
-              </ul>
-            </section>
-            <section class="md:col-span-3">
-              <h2 class="mb-3 text-lg font-semibold">Zubereitung</h2>
-              <ol class="list-decimal space-y-3 pl-5 text-neutral-200">
-                ${recipe.steps.map(s=>`<li>${escapeHtml(s)}</li>`).join('')}
-              </ol>
-            </section>
+
+          <div class="mx-auto w-full max-w-5xl px-4 pt-16 pb-24">
+            <div class="grid gap-6 md:grid-cols-5">
+              <section class="md:col-span-2">
+                <div class="sticky top-4">
+                  <div class="rounded-2xl bg-neutral-900/70 ring-1 ring-neutral-800 shadow-lg">
+                    <div class="px-5 pt-5 pb-3 border-b border-neutral-800">
+                      <h2 class="text-lg font-semibold">Zutaten</h2>
+                    </div>
+                    <ul class="space-y-2 p-5 text-neutral-200">
+                      ${recipe.ingredients.map(ing=>`<li class="flex items-start gap-2"><span class="mt-1 inline-block h-2 w-2 rounded-full bg-white/40"></span><span>${escapeHtml(ing)}</span></li>`).join('')}
+                    </ul>
+                  </div>
+                </div>
+              </section>
+              <section class="md:col-span-3">
+                <div class="rounded-2xl bg-neutral-900/50 ring-1 ring-neutral-800 shadow-lg">
+                  <div class="px-5 pt-5 pb-3 border-b border-neutral-800">
+                    <h2 class="text-lg font-semibold">Zubereitung</h2>
+                  </div>
+                  <ol class="step-list p-5 space-y-3 list-decimal pl-6 text-neutral-200">
+                    ${recipe.steps.map(s=>`<li>${escapeHtml(s)}</li>`).join('')}
+                  </ol>
+                </div>
+                <div class="mt-6 grid gap-4 md:grid-cols-2">
+                  <div class="rounded-2xl bg-neutral-900/40 ring-1 ring-neutral-800 p-4">
+                    <h3 class="font-semibold mb-2">Tipps</h3>
+                    <p class="text-sm text-neutral-300">Mit frischem Basilikum und etwas Zitronenabrieb servieren – bringt extra Frische.</p>
+                  </div>
+                  <div class="rounded-2xl bg-neutral-900/40 ring-1 ring-neutral-800 p-4">
+                    <h3 class="font-semibold mb-2">Allergene / Hinweise</h3>
+                    <p class="text-sm text-neutral-300">Angaben ohne Gewähr – Zutatenliste prüfen und ggf. anpassen.</p>
+                  </div>
+                </div>
+              </section>
+            </div>
           </div>
         </div>`;
     }
@@ -156,10 +379,16 @@
     // --- Events ---
     function bindHomeEvents(){
       const input = document.getElementById('searchInput');
-      if(input){ input.addEventListener('input', e=>{ query = e.target.value; renderApp(); }); }
+      if(input){
+        input.addEventListener('input', e=>{
+          const start = e.target.selectionStart; const end = e.target.selectionEnd;
+          query = e.target.value; renderApp();
+          const ni = document.getElementById('searchInput');
+          if(ni){ ni.focus(); try{ ni.setSelectionRange(start, end); }catch(_){} }
+        });
+      }
       const resetBtn = document.getElementById('resetBtn');
       if(resetBtn){ resetBtn.addEventListener('click', ()=>{ query = ""; activeCats = []; renderApp(); }); }
-
       document.querySelectorAll('[data-cat]').forEach(btn=>{
         btn.addEventListener('click', ()=>{
           const c = btn.getAttribute('data-cat');
@@ -167,16 +396,14 @@
           renderApp();
         });
       });
-
       document.querySelectorAll('[data-open]').forEach(card=>{
         card.addEventListener('click', ()=>{
           const id = card.getAttribute('data-open');
-          selectedRecipe = RECIPES.find(r=>r.id===id) || null;
+          selectedRecipe = ENRICHED_RECIPES.find(r=>r.id===id) || null;
           window.scrollTo({ top: 0, behavior: 'smooth' });
           renderApp();
         });
       });
-
       const wrap = document.getElementById('searchWrap');
       let last = 0;
       window.addEventListener('scroll', ()=>{
