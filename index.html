@@ -1,468 +1,200 @@
 <!doctype html>
-<html lang="de" class="h-full">
+<html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Kochbuch – Demo (Enhanced)</title>
-  <!-- Tailwind CDN -->
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dein Kochbuch – HTML (Dark Mode)</title>
+  <!-- Tailwind Play CDN, damit die bestehenden Klassen funktionieren -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    // Tailwind config: enable dark mode via class
-    tailwind.config = { darkMode: 'class' };
-  </script>
   <style>
-    /* line-clamp without plugin */
-    .line-clamp-1{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
-    .line-clamp-2{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-    .blur-backdrop{backdrop-filter: blur(10px)}
-    .transition-fast{transition: all 200ms ease}
-    .kbd{border:1px solid rgba(0,0,0,.2); padding:.1rem .35rem; border-radius:.35rem; font-size:.85em}
-    @media (prefers-reduced-motion: reduce){
-      *{transition:none!important; animation-duration:1ms!important;}
-    }
+    .shrinkable { transition: transform 200ms ease, padding 200ms ease; }
+    .shrink { transform: scale(0.95) translateY(-4px); }
   </style>
-  <link rel="preload" as="image" href="https://images.unsplash.com/photo-1484980972926-edee96e0960d?q=80&w=2070&auto=format&fit=crop">
 </head>
-<body class="min-h-screen bg-neutral-50 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
-  <!-- Skip-Link entfernt -->
-
-  <!-- Fixed top bar -->
-  <div class="fixed top-0 left-0 right-0 z-50 flex items-center justify-center pointer-events-none">
-    <div id="searchWrap" class="w-full max-w-4xl mx-4 mt-4 pointer-events-auto transition-fast" style="transform:scale(1)">
-      <div class="blur-backdrop bg-white/70 dark:bg-neutral-900/60 border border-white/40 dark:border-white/10 shadow-lg rounded-2xl px-3 py-2 flex items-center gap-2">
-        <!-- Search -->
-        <!-- Screenreader-Label & aria entfernt -->
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        <input id="searchInput" type="search" inputmode="search" autocomplete="off" placeholder="Rezepte oder Zutaten suchen… (Tipp: /)" class="flex-1 bg-transparent outline-none placeholder:text-neutral-500 dark:placeholder:text-neutral-400" />
-        <!-- Hilfetext entfernt -->
-
-        <!-- Sortierung -->
-        <div class="flex items-center gap-2">
-          <!-- sr-only Label entfernt -->
-          <select id="sortSel" class="text-sm bg-white/70 dark:bg-neutral-900/60 border border-neutral-200/70 dark:border-white/10 rounded-xl px-2 py-1">
-            <option value="relevance">Relevanz</option>
-            <option value="time">Zeit (aufsteigend)</option>
-            <option value="timeDesc">Zeit (absteigend)</option>
-            <option value="difficulty">Schwierigkeit</option>
-            <option value="title">Titel A–Z</option>
-          </select>
-        </div>
-
-        <!-- Clear -->
-        <button id="clearBtn" class="hidden items-center gap-1 text-sm px-2 py-1 rounded-xl hover:bg-white/70 dark:hover:bg-neutral-800/70" type="button">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-          <span>Löschen</span>
-        </button>
-
-        <!-- Dark mode -->
-        <button id="themeBtn" class="inline-flex items-center gap-1 text-sm px-2 py-1 rounded-xl hover:bg-white/70 dark:hover:bg-neutral-800/70" type="button">
-          <span id="themeIcon">🌞</span>
-          <span class="hidden sm:inline">Theme</span>
-        </button>
-      </div>
-
-      <!-- Kategorien unter der Leiste -->
-      <div id="catBar" class="mt-2 flex flex-wrap gap-2 justify-center px-1 transition-fast" style="opacity:1"></div>
-
-      <div class="mt-2 text-center text-xs text-neutral-600 dark:text-neutral-400">Shortcuts: <span class="kbd">/</span> Suche · <span class="kbd">Esc</span> zurücksetzen</div>
-    </div>
-  </div>
-
-  <!-- Hero -->
-  <section id="homeSection" class="relative w-full">
-    <img src="https://images.unsplash.com/photo-1484980972926-edee96e0960d?q=80&w=2070&auto=format&fit=crop" class="w-full h-[66vh] object-cover" alt="Verschiedene Gerichte als Collage"/>
-    <!-- sr-only Titel entfernt -->
-
-    <div class="absolute bottom-6 left-0 right-0 flex items-center justify-center">
-      <div class="blur-backdrop bg-black/25 text-white px-4 py-2 rounded-xl flex items-center gap-2">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3"/><path d="M10 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3"/><path d="M18 3v18"/></svg>
-        <span class="tracking-wide">Finde dein nächstes Lieblingsrezept</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- Main list -->
-  <main id="main" class="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-8">
-    <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
-      <h2 class="text-xl md:text-2xl font-semibold">Rezepte</h2>
-      <div class="text-sm text-neutral-600 dark:text-neutral-400" id="statusLine"></div>
-    </div>
-    <div id="cardGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
-    <div id="noResults" class="hidden col-span-full text-center py-20 text-neutral-500 dark:text-neutral-400">Keine Treffer. Bitte Suchbegriff ändern oder Kategorien zurücksetzen.</div>
-  </main>
-
-  <!-- Detail -->
-  <section id="detailSection" class="hidden min-h-screen">
-    <div class="fixed top-0 left-0 right-0 z-50">
-      <div class="mx-4 mt-4">
-        <div class="blur-backdrop bg-white/70 dark:bg-neutral-900/60 border border-white/50 dark:border-white/10 rounded-2xl shadow flex items-center gap-2 px-3 py-2">
-          <button id="backBtn" class="inline-flex items-center gap-2 px-2 py-1 rounded-xl hover:bg-white/60 dark:hover:bg-neutral-800/70" type="button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            <span>Zurück</span>
-          </button>
-          <div class="ml-auto flex items-center gap-3 text-sm text-neutral-700 dark:text-neutral-300 pr-1" id="detailMeta"></div>
-          <button id="printBtn" class="inline-flex items-center gap-1 px-2 py-1 rounded-xl hover:bg-white/60 dark:hover:bg-neutral-800/70" type="button">🖨️ <span class="hidden sm:inline">Drucken</span></button>
-        </div>
-      </div>
-    </div>
-
-    <div class="w-full"><img id="detailImg" class="w-full h-[46vh] md:h-[60vh] object-cover" alt="Rezeptbild"/></div>
-
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 md:px-8">
-      <h1 id="detailTitle" class="text-2xl md:text-4xl font-bold mt-6"></h1>
-      <div id="detailCats" class="flex flex-wrap gap-2 mt-4"></div>
-
-      <!-- Portionen-Scaler -->
-      <div class="mt-4 flex items-center gap-3">
-        <label for="portionenInput" class="text-sm">Portionen:</label>
-        <div class="inline-flex items-center border rounded-xl overflow-hidden">
-          <button id="portionMinus" class="px-3 py-1" type="button">−</button>
-          <input id="portionenInput" type="number" min="1" step="1" class="w-16 text-center bg-transparent py-1" />
-          <button id="portionPlus" class="px-3 py-1" type="button">+</button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mt-6 pb-16">
-        <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
-          <h2 class="text-lg font-semibold mb-3">Zutaten</h2>
-          <ul id="detailZutaten" class="list-disc pl-5 space-y-1"></ul>
-        </div>
-        <div class="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
-          <h2 class="text-lg font-semibold mb-3">Zubereitung</h2>
-          <ol id="detailSchritte" class="list-decimal pl-5 space-y-2"></ol>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer class="border-t border-neutral-200 dark:border-neutral-800 bg-white/70 dark:bg-neutral-900/70">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 md:px-8 py-10 text-sm text-neutral-600 dark:text-neutral-400 flex flex-col md:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3"/><path d="M10 3v7a2 2 0 0 0 2 2h0a2 2 0 0 0 2-2V3"/><path d="M18 3v18"/></svg>
-        <span>Kochbuch – Demo</span>
-      </div>
-      <div class="opacity-70">© <span id="year"></span> – Nur UI-Prototyp</div>
-    </div>
-  </footer>
+<body class="min-h-screen bg-neutral-950 text-neutral-100">
+  <div id="app"></div>
 
   <script>
-    // ---------- Demo-Daten ----------
-    const KATEGORIEN = ["Pasta","Vegan","Vegetarisch","Fleisch","Fisch","Frühstück","Suppe","Salat","Dessert","Backen","Schnell & Einfach"];
-
-    const REZEPTE = [
-      { id:"spaghetti-pomodoro", titel:"Spaghetti Pomodoro", kategorie:["Pasta","Schnell & Einfach","Vegetarisch"], dauerMin:20, schwierig:"leicht", portionen:2, bild:"https://images.unsplash.com/photo-1473091534298-04dcbce3278c?q=80&w=2070&auto=format&fit=crop", zutaten:["200 g Spaghetti","1 Dose Tomaten (gehackt)","2 Knoblauchzehen","Olivenöl, Salz, Pfeffer, Basilikum"], schritte:["Spaghetti in Salzwasser kochen.","Knoblauch in Olivenöl anrösten, Tomaten zugeben und 10 Min. köcheln.","Mit Salz, Pfeffer und Basilikum abschmecken, mit Pasta mischen."] },
-      { id:"avocado-toast", titel:"Avocado-Toast mit Ei", kategorie:["Frühstück","Vegetarisch","Schnell & Einfach"], dauerMin:10, schwierig:"leicht", portionen:1, bild:"https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=2069&auto=format&fit=crop", zutaten:["2 Scheiben Sauerteigbrot","1 reife Avocado","1 Ei","Zitrone, Chili, Salz"], schritte:["Brot toasten, Avocado zerdrücken und würzen.","Ei nach Wunsch garen (Spiegelei/pochiert).","Alles anrichten und genießen."] },
-      { id:"lemon-salmon", titel:"Zitronen-Lachs aus dem Ofen", kategorie:["Fisch"], dauerMin:25, schwierig:"mittel", portionen:2, bild:"https://images.unsplash.com/photo-1558036117-15d82a90b9b4?q=80&w=2070&auto=format&fit=crop", zutaten:["2 Lachsfilets","Zitrone, Knoblauch, Dill","Olivenöl, Salz, Pfeffer"], schritte:["Backofen auf 200°C vorheizen.","Lachs würzen, mit Zitronenscheiben belegen und 12–15 Min. backen.","Mit frischem Dill servieren."] },
-      { id:"choc-mousse", titel:"Schoko-Mousse", kategorie:["Dessert","Backen"], dauerMin:30, schwierig:"mittel", portionen:4, bild:"https://images.unsplash.com/photo-1541781774459-bb2af2f05b55?q=80&w=2069&auto=format&fit=crop", zutaten:["200 g Zartbitterschokolade","3 Eier","200 ml Sahne","1 EL Zucker, Prise Salz"], schritte:["Schokolade schmelzen und abkühlen lassen.","Eier trennen, Eiweiß mit Salz steif schlagen, Sahne schlagen.","Eigelb mit Zucker verrühren, Schokolade einrühren, Sahne und Eiweiß unterheben, kühlen."] },
+    // --- Dummy-Daten (wie im React-Code) ---
+    const CATEGORIES = [
+      "Pasta","Vegan","Vegetarisch","Fleisch","Fisch","Suppe","Dessert","Frühstück","Salat","Schnell & Easy",
     ];
 
-    const SCHWIERIG_ORDER = { leicht: 1, mittel: 2, schwer: 3 };
+    const RECIPES = [
+      { id: "r1", title: "Cremige Tomaten-Pasta", categories: ["Pasta","Vegetarisch","Schnell & Easy"], ingredients: ["Pasta","Tomate","Sahne","Basilikum","Knoblauch"], image: "https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=1600&auto=format&fit=crop", time: 20, portions: 2, steps: ["Pasta in Salzwasser kochen.","Knoblauch anrösten, mit Tomaten und Sahne ablöschen.","Mit Salz, Pfeffer und Basilikum abschmecken.","Mit Pasta vermengen und servieren."] },
+      { id: "r2", title: "Zitronen-Lachs vom Blech", categories: ["Fisch","Schnell & Easy"], ingredients: ["Lachs","Zitrone","Olivenöl","Knoblauch","Kartoffeln"], image: "https://images.unsplash.com/photo-1615937691194-97dbd3f30b54?q=80&w=1600&auto=format&fit=crop", time: 30, portions: 2, steps: ["Backofen auf 200°C vorheizen.","Kartoffeln vorschneiden und auf Blech geben.","Lachs mit Zitrone, Öl, Salz & Pfeffer würzen und aufs Blech legen.","Alles gemeinsam backen bis gar."] },
+      { id: "r3", title: "Fluffige Pfannkuchen", categories: ["Frühstück","Dessert","Vegetarisch"], ingredients: ["Mehl","Milch","Ei","Backpulver","Zucker"], image: "https://images.unsplash.com/photo-1495214783159-3503fd1b572d?q=80&w=1600&auto=format&fit=crop", time: 15, portions: 3, steps: ["Teig anrühren (Mehl, Milch, Ei, Backpulver, Zucker).","In Pfanne portionsweise ausbacken.","Mit Ahornsirup oder Beeren servieren."] },
+    ];
 
-    // ---------- State ----------
-    let query = '';
-    let activeCats = new Set();
-    let selected = null;
-    let sortMode = 'relevance';
-    let servingsFactor = 1; // multiplier vs. original
+    // --- State ---
+    let query = "";
+    let activeCats = [];
+    let selectedRecipe = null;
 
-    // ---------- Helpers ----------
-    const el = (sel) => document.querySelector(sel);
-    const els = (sel) => Array.from(document.querySelectorAll(sel));
-    const $ = el; const $$ = els;
-
-    const searchWrap = $('#searchWrap');
-    const catBar = $('#catBar');
-    const cardGrid = $('#cardGrid');
-    const noResults = $('#noResults');
-    const searchInput = $('#searchInput');
-    const clearBtn = $('#clearBtn');
-    const sortSel = $('#sortSel');
-    const themeBtn = $('#themeBtn');
-    const themeIcon = $('#themeIcon');
-
-    const detailSection = $('#detailSection');
-    const homeSection = $('#homeSection');
-    const mainList = $('#main');
-
-    const backBtn = $('#backBtn');
-    const detailMeta = $('#detailMeta');
-    const detailImg = $('#detailImg');
-    const detailTitle = $('#detailTitle');
-    const detailCats = $('#detailCats');
-    const detailZutaten = $('#detailZutaten');
-    const detailSchritte = $('#detailSchritte');
-    const statusLine = $('#statusLine');
-
-    const portionInput = $('#portionenInput');
-    const portionMinus = $('#portionMinus');
-    const portionPlus = $('#portionPlus');
-
-    // Year
-    $('#year').textContent = new Date().getFullYear();
-
-    // Theme handling
-    const THEME_KEY = 'cookbook_theme';
-    function applyTheme(t){
-      if(t==='dark'){ document.documentElement.classList.add('dark'); themeIcon.textContent='🌙'; }
-      else { document.documentElement.classList.remove('dark'); themeIcon.textContent='🌞'; }
-    }
-    function getInitialTheme(){
-      const saved = localStorage.getItem(THEME_KEY);
-      if(saved) return saved;
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    let theme = getInitialTheme();
-    applyTheme(theme);
-    themeBtn.addEventListener('click', ()=>{
-      theme = (theme==='dark')?'light':'dark';
-      localStorage.setItem(THEME_KEY, theme);
-      applyTheme(theme);
-    });
-
-    // Scroll effects
-    window.addEventListener('scroll', () => {
-      const y = window.scrollY;
-      const scale = Math.max(0.8, 1 - y / 600);
-      const opacity = Math.max(0, 1 - y / 220);
-      searchWrap.style.transform = `scale(${scale})`;
-      catBar.style.opacity = opacity;
-    }, { passive: true });
-
-    // Debounce util
-    function debounce(fn, ms=200){ let t; return (...args)=>{ clearTimeout(t); t=setTimeout(()=>fn(...args),ms); }; }
-
-    // (Favoriten-Code vollständig entfernt)
-
-    // Categories
-    function renderCats(){
-      catBar.innerHTML = '';
-      KATEGORIEN.forEach(c => {
-        const btn = document.createElement('button');
-        const active = activeCats.has(c);
-        btn.className = 'blur-backdrop border shadow-sm text-sm px-3 py-1.5 rounded-full transition-fast ' + (active ? 'bg-white/80 dark:bg-neutral-800/80 border-white/60 dark:border-white/10' : 'bg-white/40 dark:bg-neutral-900/40 hover:bg-white/60 dark:hover:bg-neutral-800/60 border-white/40 dark:border-white/10');
-        btn.textContent = c;
-        // role/aria entfernt
-        btn.addEventListener('click', () => { toggleCat(c); });
-        catBar.appendChild(btn);
+    // --- Helpers ---
+    function filterRecipes(q, cats) {
+      const s = (q || "").trim().toLowerCase();
+      return RECIPES.filter(r => {
+        const matchesQuery = !s || r.title.toLowerCase().includes(s) || r.ingredients.join(" ").toLowerCase().includes(s) || r.categories.join(" ").toLowerCase().includes(s);
+        const matchesCats = cats.length === 0 || cats.every(c => r.categories.includes(c));
+        return matchesQuery && matchesCats;
       });
     }
-    function toggleCat(c){
-      if(activeCats.has(c)) activeCats.delete(c); else activeCats.add(c);
-      renderCats();
-      renderList();
-      syncClearBtn();
-      updateURL();
+
+    function escapeHtml(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+
+    // --- Rendering ---
+    function renderApp(){
+      const root = document.getElementById('app');
+      root.innerHTML = selectedRecipe ? renderDetail(selectedRecipe) : renderHome();
+      if(selectedRecipe){ bindDetailEvents(); } else { bindHomeEvents(); }
     }
 
-    // Search + Clear + Sort
-    searchInput.addEventListener('input', debounce((e)=>{
-      query = e.target.value.toLowerCase();
-      renderList();
-      syncClearBtn();
-      updateURL();
-    }, 120));
+    function renderHome(){
+      const showResults = query.trim().length > 0 || activeCats.length > 0;
+      const filtered = filterRecipes(query, activeCats);
+      return `
+        <div class="min-h-screen">
+          <!-- HERO: wie React-Version (kleiner) -->
+          <section class="relative h-[50vh] min-h-[360px] w-full">
+            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2400&auto=format&fit=crop" alt="Hero" class="absolute inset-0 h-full w-full object-cover" />
+            <div class="absolute inset-0 bg-black/40"></div>
 
-    sortSel.addEventListener('change', ()=>{ sortMode = sortSel.value; renderList(); updateURL(); });
-
-    clearBtn.addEventListener('click', ()=>{
-      query = '';
-      activeCats.clear();
-      sortMode = 'relevance';
-      searchInput.value = '';
-      sortSel.value = 'relevance';
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      renderCats();
-      renderList();
-      syncClearBtn();
-      updateURL();
-    });
-
-    function syncClearBtn(){
-      if(query || activeCats.size){
-        clearBtn.classList.remove('hidden');
-        clearBtn.classList.add('flex');
-      } else {
-        clearBtn.classList.add('hidden');
-        clearBtn.classList.remove('flex');
-      }
-    }
-
-    // Cards
-    function renderList(){
-      let list = REZEPTE.map(r=>({ ...r, score: relevanceScore(r, query) }));
-      list = list.filter(r => {
-        const qOk = !query || r.score > 0;
-        const catOk = !activeCats.size || [...activeCats].every(c => r.kategorie.includes(c));
-        return qOk && catOk;
-      });
-
-      switch(sortMode){
-        case 'time': list.sort((a,b)=>a.dauerMin-b.dauerMin); break;
-        case 'timeDesc': list.sort((a,b)=>b.dauerMin-a.dauerMin); break;
-        case 'difficulty': list.sort((a,b)=>SCHWIERIG_ORDER[a.schwierig]-SCHWIERIG_ORDER[b.schwierig]); break;
-        case 'title': list.sort((a,b)=>a.titel.localeCompare(b.titel,'de')); break;
-        default: list.sort((a,b)=>b.score-a.score); // relevance
-      }
-
-      cardGrid.innerHTML = '';
-      if(list.length === 0){
-        noResults.classList.remove('hidden');
-        statusLine.textContent = '0 Treffer';
-      } else {
-        noResults.classList.add('hidden');
-        statusLine.textContent = `${list.length} Treffer`;
-      }
-
-      list.forEach(r => {
-        const art = document.createElement('article');
-        art.className = 'group cursor-pointer';
-        art.innerHTML = `
-          <div class="relative overflow-hidden rounded-2xl shadow-sm bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
-            <img src="${r.bild}" alt="${r.titel}" class="h-44 w-full object-cover group-hover:scale-[1.02] transition-fast" loading="lazy"/>
-            <div class="p-4">
-              <h3 class="font-semibold mb-2 line-clamp-1">${highlight(r.titel, query)}</h3>
-              <div class="flex flex-wrap gap-1.5 mb-3">
-                ${r.kategorie.slice(0,3).map(c=>`<span class="text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">${c}</span>`).join('')}
+            <!-- Suche + Kategorien (sticky) -->
+            <div class="sticky top-0 z-30 flex w-full flex-col items-center justify-center shrinkable" id="searchWrap">
+              <div class="mx-4 mt-4 w-full max-w-3xl py-4" id="searchPad">
+                <div class="flex items-center gap-2 rounded-2xl bg-neutral-900/70 backdrop-blur-md shadow-lg ring-1 ring-neutral-700 px-4 py-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 opacity-70"><path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.23 12.014l3.753 3.753a.75.75 0 1 0 1.06-1.06l-3.752-3.754A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clip-rule="evenodd"/></svg>
+                  <input id="searchInput" value="${escapeHtml(query)}" placeholder="Rezepte oder Zutaten suchen…" class="w-full bg-transparent placeholder-white/80 text-white caret-white focus:outline-none text-base md:text-lg" />
+                  ${(query || activeCats.length>0)?`<button id="resetBtn" class="rounded-xl px-3 py-1 text-sm font-medium text-neutral-100 hover:bg-white/10">Zurücksetzen</button>`:''}
+                </div>
               </div>
-              <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2 mb-3">${previewFromZutaten(r.zutaten, query)}</p>
-              <div class="flex items-center justify-between text-sm text-neutral-600 dark:text-neutral-400">
-                <span class="inline-flex items-center gap-1">${clockIcon(16)} ${r.dauerMin} Min</span>
-                <span class="inline-flex items-center gap-1">${chefIcon(16)} ${r.schwierig}</span>
-                <span class="inline-flex items-center gap-1">${usersIcon(16)} ${r.portionen}</span>
+
+              <!-- Kategorien direkt unter der Suche -->
+              <div class="mt-4 z-20">
+                <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-2 px-4">
+                  ${CATEGORIES.map(c=>{
+                    const active = activeCats.includes(c);
+                    return `<button data-cat="${c}" class="rounded-full px-4 py-2 text-sm font-medium shadow ring-1 backdrop-blur-md transition ${active? 'bg-neutral-200 text-neutral-900 ring-neutral-300':'bg-black/40 text-neutral-100 ring-white/20 hover:bg-black/30'}">${c}</button>`;
+                  }).join('')}
+                </div>
               </div>
             </div>
-          </div>`;
-        art.querySelector('img').addEventListener('click', ()=> openDetail(r));
-        art.querySelector('h3').addEventListener('click', ()=> openDetail(r));
-        cardGrid.appendChild(art);
+          </section>
+
+          <!-- Ergebnisse / Vorschläge -->
+          <main class="mx-auto -mt-10 w-full max-w-6xl px-4 pb-24">
+            <div class="mb-6 flex items-center justify-between">
+              <h2 class="text-xl font-semibold tracking-tight">${showResults? 'Ergebnisse':'Beliebte Rezepte'}</h2>
+              ${showResults? `<p class="text-sm text-neutral-400">${filtered.length} Rezept${filtered.length===1? '':'e'} gefunden</p>`: ''}
+            </div>
+            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+              ${(showResults? filtered: RECIPES).map(r=>renderCard(r)).join('')}
+            </div>
+          </main>
+
+          <!-- Footer -->
+          <footer class="border-t border-neutral-800 bg-neutral-900/70 backdrop-blur">
+            <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-neutral-400 md:flex-row">
+              <p>© ${new Date().getFullYear()} Dein Kochbuch</p>
+              <div class="flex items-center gap-3">
+                <a class="hover:underline" href="#">Impressum</a>
+                <a class="hover:underline" href="#">Datenschutz</a>
+                <a class="hover:underline" href="#">Kontakt</a>
+              </div>
+            </div>
+          </footer>
+        </div>`;
+    }
+
+    function renderCard(r){
+      return `
+        <article class="group cursor-pointer overflow-hidden rounded-2xl bg-neutral-900 shadow-sm ring-1 ring-neutral-800" data-open="${r.id}">
+          <div class="relative aspect-[4/3] w-full overflow-hidden">
+            <img src="${r.image}" alt="${escapeHtml(r.title)}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-transparent"></div>
+            <div class="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-md">${r.time} Min • ${r.portions} Port.</div>
+          </div>
+          <div class="space-y-2 p-4">
+            <h3 class="line-clamp-2 text-base font-semibold leading-snug">${escapeHtml(r.title)}</h3>
+            <div class="flex flex-wrap gap-1">
+              ${r.categories.slice(0,3).map(c=>`<span class="rounded-full bg-neutral-800 px-2 py-1 text-xs text-neutral-300">${c}</span>`).join('')}
+            </div>
+          </div>
+        </article>`;
+    }
+
+    function renderDetail(recipe){
+      return `
+        <div class="min-h-screen">
+          <div class="relative h-[38vh] min-h-[300px] w-full">
+            <img src="${recipe.image}" alt="${escapeHtml(recipe.title)}" class="absolute inset-0 h-full w-full object-cover" />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent"></div>
+            <button id="backBtn" class="absolute left-4 top-4 rounded-full bg-neutral-900/70 px-4 py-2 text-sm font-medium text-neutral-100 shadow backdrop-blur hover:bg-neutral-900">← Zur Übersicht</button>
+          </div>
+          <div class="mx-auto w-full max-w-3xl px-4 py-6">
+            <h1 class="mb-2 text-2xl font-extrabold tracking-tight md:text-3xl">${escapeHtml(recipe.title)}</h1>
+            <p class="text-neutral-400">${recipe.time} Minuten • ${recipe.portions} Portionen</p>
+          </div>
+          <div class="mx-auto grid w-full max-w-5xl gap-6 px-4 pb-24 md:grid-cols-5">
+            <section class="md:col-span-2">
+              <h2 class="mb-3 text-lg font-semibold">Zutaten</h2>
+              <ul class="list-disc space-y-2 pl-5 text-neutral-200">
+                ${recipe.ingredients.map(ing=>`<li>${escapeHtml(ing)}</li>`).join('')}
+              </ul>
+            </section>
+            <section class="md:col-span-3">
+              <h2 class="mb-3 text-lg font-semibold">Zubereitung</h2>
+              <ol class="list-decimal space-y-3 pl-5 text-neutral-200">
+                ${recipe.steps.map(s=>`<li>${escapeHtml(s)}</li>`).join('')}
+              </ol>
+            </section>
+          </div>
+        </div>`;
+    }
+
+    // --- Events ---
+    function bindHomeEvents(){
+      const input = document.getElementById('searchInput');
+      if(input){ input.addEventListener('input', e=>{ query = e.target.value; renderApp(); }); }
+      const resetBtn = document.getElementById('resetBtn');
+      if(resetBtn){ resetBtn.addEventListener('click', ()=>{ query = ""; activeCats = []; renderApp(); }); }
+
+      document.querySelectorAll('[data-cat]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const c = btn.getAttribute('data-cat');
+          activeCats = activeCats.includes(c) ? activeCats.filter(x=>x!==c) : [...activeCats, c];
+          renderApp();
+        });
       });
+
+      document.querySelectorAll('[data-open]').forEach(card=>{
+        card.addEventListener('click', ()=>{
+          const id = card.getAttribute('data-open');
+          selectedRecipe = RECIPES.find(r=>r.id===id) || null;
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          renderApp();
+        });
+      });
+
+      const wrap = document.getElementById('searchWrap');
+      let last = 0;
+      window.addEventListener('scroll', ()=>{
+        const y = window.scrollY || 0;
+        if(!wrap) return;
+        if(y>180 && last<=180) wrap.classList.add('shrink');
+        if(y<=180 && last>180) wrap.classList.remove('shrink');
+        last = y;
+      }, { passive: true });
     }
 
-    // Relevance score (simple): title weight + ingredient hits
-    function relevanceScore(r, q){
-      if(!q) return 1;
-      let s = 0;
-      const ql = q.toLowerCase();
-      if(r.titel.toLowerCase().includes(ql)) s += 5;
-      r.zutaten.forEach(z=>{ if(z.toLowerCase().includes(ql)) s += 1; });
-      return s;
-    }
-    function escapeHTML(str){ return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'}[m])); }
-    function highlight(text, q){
-      if(!q) return escapeHTML(text);
-      const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig');
-      return escapeHTML(text).replace(re, '<mark class="bg-yellow-200 dark:bg-yellow-700">$1</mark>');
-    }
-    function previewFromZutaten(zs, q){
-      const joined = zs.join(' · ');
-      return highlight(joined, q);
+    function bindDetailEvents(){
+      const backBtn = document.getElementById('backBtn');
+      if(backBtn){ backBtn.addEventListener('click', ()=>{ selectedRecipe = null; renderApp(); }); }
     }
 
-    // Detail view
-    function openDetail(r){
-      selected = r;
-      servingsFactor = 1; // reset
-      detailImg.src = r.bild;
-      detailTitle.textContent = r.titel;
-      detailCats.innerHTML = r.kategorie.map(c => `<span class="text-xs px-2 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700">${c}</span>`).join('');
-      detailMeta.innerHTML = `
-        <span class="inline-flex items-center gap-1">${clockIcon(16)} ${r.dauerMin} Min</span>
-        <span class="inline-flex items-center gap-1">${chefIcon(16)} ${r.schwierig}</span>
-        <span class="inline-flex items-center gap-1">${usersIcon(16)} <span id="personsMeta">${r.portionen}</span> Pers.</span>`;
-
-      // Portionen init
-      portionInput.value = r.portionen;
-
-      renderIngredients();
-      detailSchritte.innerHTML = r.schritte.map(s=>`<li>${s}</li>`).join('');
-
-      homeSection.classList.add('hidden');
-      mainList.classList.add('hidden');
-      detailSection.classList.remove('hidden');
-      window.scrollTo({ top: 0 });
-      history.replaceState(null, '', `#${r.id}${buildQueryString()}`);
-    }
-
-    // Servings scaling — best-effort parse of leading numbers
-    function scaleLine(line, factor){
-      // Match things like "200 g", "1", "1,5", "1.5" at start
-      const m = line.match(/^\s*(\d+[\.,]?\d*)\s*(.*)$/);
-      if(!m) return line;
-      const num = parseFloat(m[1].replace(',', '.'));
-      if(Number.isNaN(num)) return line;
-      const rest = m[2];
-      const scaled = (num * factor);
-      const pretty = (Math.round(scaled*10)/10).toString().replace('.', ',');
-      return `${pretty} ${rest}`.trim();
-    }
-
-    function renderIngredients(){
-      if(!selected) return;
-      const factor = Number(portionInput.value) / selected.portionen;
-      $('#personsMeta').textContent = portionInput.value;
-      detailZutaten.innerHTML = selected.zutaten.map(z=>`<li>${scaleLine(z, factor)}</li>`).join('');
-    }
-
-    portionMinus.addEventListener('click', ()=>{ const v = Math.max(1, (parseInt(portionInput.value)||1)-1); portionInput.value=v; renderIngredients(); });
-    portionPlus.addEventListener('click', ()=>{ const v = (parseInt(portionInput.value)||1)+1; portionInput.value=v; renderIngredients(); });
-    portionInput.addEventListener('input', ()=>{ if(portionInput.value===''||Number(portionInput.value)<1) return; renderIngredients(); });
-
-    // Back & print
-    backBtn.addEventListener('click', ()=>{
-      selected = null;
-      detailSection.classList.add('hidden');
-      homeSection.classList.remove('hidden');
-      mainList.classList.remove('hidden');
-      history.replaceState(null, '', buildQueryString());
-    });
-    $('#printBtn').addEventListener('click', ()=> window.print());
-
-    // Icons
-    function clockIcon(size=20){ return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`; }
-    function chefIcon(size=20){ return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c-3 0-5 2-5 4 0 1 .5 2 1.3 2.6C7.5 10 7 11 7 12v6h10v-6c0-1-.5-2-1.3-2.4C16.5 9 17 8 17 7c0-2-2-4-5-4Z"/><path d="M7 18h10"/></svg>`; }
-    function usersIcon(size=20){ return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`; }
-
-    // URL sync (deep links)
-    function buildQueryString(){
-      const params = new URLSearchParams();
-      if(query) params.set('q', query);
-      if(activeCats.size) params.set('cats', [...activeCats].join(','));
-      if(sortMode !== 'relevance') params.set('sort', sortMode);
-      const s = params.toString();
-      return s ? `?${s}` : '';
-    }
-    function updateURL(){
-      const hash = selected ? `#${selected.id}` : '#';
-      const qs = buildQueryString();
-      history.replaceState(null, '', `${hash}${qs}`);
-    }
-    function restoreFromURL(){
-      const url = new URL(location.href);
-      const q = url.searchParams.get('q') || '';
-      const cats = (url.searchParams.get('cats')||'').split(',').filter(Boolean);
-      const sort = url.searchParams.get('sort') || 'relevance';
-
-      query = q.toLowerCase();
-      searchInput.value = q;
-      activeCats = new Set(cats);
-      sortMode = sort;
-      sortSel.value = sortMode;
-
-      renderCats();
-      renderList();
-      syncClearBtn();
-
-      const startId = location.hash.replace('#','');
-      const startRecipe = REZEPTE.find(r => r.id === startId);
-      if(startRecipe) openDetail(startRecipe);
-    }
-
-    // Tastatur-Shortcuts ENTFERNT
-
-    // Initial render
-    restoreFromURL();
+    // Start
+    renderApp();
   </script>
 </body>
 </html>
-
