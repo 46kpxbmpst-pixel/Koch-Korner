@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dein Kochbuch – HTML (Auto-Kategorien: Vorspeise/Hauptspeise/Nachspeise/Snack/Schnell & Easy/Backen)</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
@@ -12,8 +12,6 @@
     .glass { background: rgba(20,20,20,.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
     .step-list li { padding: .75rem 1rem; border-radius: .75rem; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); }
     .meta-chip { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); }
-    * { -webkit-tap-highlight-color: transparent; }
-    input, button { touch-action: manipulation; }
   </style>
 </head>
 <body class="min-h-screen bg-neutral-950 text-neutral-100">
@@ -181,6 +179,7 @@
       if (/(kuchen|torte|dessert|nachspeise|pudding|süß|tiramisu|mousse)/.test(text)) cats.add("Nachspeise");
       if (/(snack|brötchen|fingerfood|toast|sandwich|wrap)/.test(text)) cats.add("Snack");
       if (/(backen|kuchen|torte|brot|gebäck|plätzchen|hefeteig|blech)/.test(text)) cats.add("Backen");
+      // Nur erlaubte Kategorien zurückgeben
       return Array.from(cats).filter(c => ALLOWED_CATS.includes(c));
     }
 
@@ -225,18 +224,16 @@
             <!-- Suche + Kategorien (sticky) -->
             <div class="sticky top-0 z-30 flex w-full flex-col items-center justify-center shrinkable" id="searchWrap">
               <div class="mx-4 mt-4 w-full max-w-3xl py-4" id="searchPad">
-                <form id="searchForm" class="flex items-center gap-2 rounded-2xl bg-neutral-900/70 backdrop-blur-md shadow-lg ring-1 ring-neutral-700 px-3 py-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 opacity-70 shrink-0"><path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.23 12.014l3.753 3.753a.75.75 0 1 0 1.06-1.06l-3.752-3.754A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clip-rule="evenodd"/></svg>
-                  <input id="searchInput" type="search" enterkeyhint="search" inputmode="search" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" value="${escapeHtml(query)}" placeholder="Rezepte oder Zutaten suchen…" class="w-full bg-transparent placeholder-white/80 text-white caret-white focus:outline-none text-base md:text-lg" />
-                  <button type="submit" class="rounded-xl px-3 py-1 text-sm font-medium text-neutral-900 bg-neutral-100/90 hover:bg-neutral-100 active:scale-[.99] md:inline">Suchen</button>
-                  ${(query || activeCats.length>0)?`<button id="resetBtn" type="button" class="rounded-xl px-3 py-1 text-sm font-medium text-neutral-100 hover:bg-white/10">Zurücksetzen</button>`:''}
-                </form>
+                <div class="flex items-center gap-2 rounded-2xl bg-neutral-900/70 backdrop-blur-md shadow-lg ring-1 ring-neutral-700 px-4 py-3">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 opacity-70"><path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.23 12.014l3.753 3.753a.75.75 0 1 0 1.06-1.06l-3.752-3.754A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clip-rule="evenodd"/></svg>
+                  <input id="searchInput" value="${escapeHtml(query)}" placeholder="Rezepte oder Zutaten suchen…" class="w-full bg-transparent placeholder-white/80 text-white caret-white focus:outline-none text-base md:text-lg" />
+                  ${(query || activeCats.length>0)?`<button id="resetBtn" class="rounded-xl px-3 py-1 text-sm font-medium text-neutral-100 hover:bg-white/10">Zurücksetzen</button>`:''}
+                </div>
               </div>
 
               <!-- Kategorien (fixe Liste) -->
               <div class="mt-4 z-20">
-                <!-- Mobile: horizontales Scrollen für viele Kategorien -->
-                <div class="mx-auto flex max-w-5xl items-center justify-start gap-2 px-4 overflow-x-auto scroll-px-4 whitespace-nowrap md:justify-center md:flex-wrap md:whitespace-normal">
+                <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-2 px-4">
                   ${CATEGORIES.map(c=>{
                     const active = activeCats.includes(c);
                     return `<button data-cat="${c}" class="rounded-full px-4 py-2 text-sm font-medium shadow ring-1 backdrop-blur-md transition ${active? 'bg-neutral-200 text-neutral-900 ring-neutral-300':'bg-black/40 text-neutral-100 ring-white/20 hover:bg-black/30'}">${c}</button>`;
@@ -247,8 +244,7 @@
           </section>
 
           <!-- Ergebnisse / Vorschläge -->
-          <a id="resultsTop"></a>
-          <main id="results" class="mx-auto -mt-10 w-full max-w-6xl px-4 pb-24">
+          <main class="mx-auto -mt-10 w-full max-w-6xl px-4 pb-24">
             <div class="mb-6 flex items-center justify-between">
               <h2 class="text-xl font-semibold tracking-tight">${showResults? 'Ergebnisse':'Beliebte Rezepte'}</h2>
               ${showResults? `<p class="text-sm text-neutral-400">${filtered.length} Rezept${filtered.length===1? '':'e'} gefunden</p>`: ''}
@@ -358,32 +354,12 @@
     // --- Events ---
     function bindHomeEvents(){
       const input = document.getElementById('searchInput');
-      const form = document.getElementById('searchForm');
       if(input){
         input.addEventListener('input', e=>{
           const start = e.target.selectionStart; const end = e.target.selectionEnd;
           query = e.target.value; renderApp();
           const ni = document.getElementById('searchInput');
           if(ni){ ni.focus(); try{ ni.setSelectionRange(start, end); }catch(_){} }
-        });
-        // Enter auf mobiler Tastatur bestätigt die Suche
-        input.addEventListener('keydown', (e)=>{
-          if(e.key === 'Enter'){
-            e.preventDefault();
-            if(form) form.requestSubmit();
-          }
-        });
-      }
-      if(form){
-        form.addEventListener('submit', (e)=>{
-          e.preventDefault();
-          const v = (document.getElementById('searchInput')?.value || '').trim();
-          query = v; renderApp();
-          // Tastatur schließen
-          document.activeElement && typeof document.activeElement.blur === 'function' && document.activeElement.blur();
-          // zu Ergebnissen scrollen
-          const res = document.getElementById('results');
-          if(res){ res.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         });
       }
       const resetBtn = document.getElementById('resetBtn');
@@ -393,8 +369,6 @@
           const c = btn.getAttribute('data-cat');
           activeCats = activeCats.includes(c) ? activeCats.filter(x=>x!==c) : [...activeCats, c];
           renderApp();
-          const res = document.getElementById('results');
-          if(res){ res.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
         });
       });
       document.querySelectorAll('[data-open]').forEach(card=>{
