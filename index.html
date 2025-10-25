@@ -1,435 +1,155 @@
-<!doctype html>
-<html lang="de">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Rezeptseite – Pinterest Stil</title>
-  <style>
-    :root{
-      --bg: #f7f7f8;
-      --card: #ffffff;
-      --text: #1f2328;
-      --muted: #6b7280;
-      --chip: #eef2ff;
-      --chip-text:#3730a3;
-      --accent:#ef4444;
-      --border:#e5e7eb;
-      --shadow: 0 4px 18px rgba(0,0,0,.08);
-      --radius:16px;
-    }
-    [data-theme="dark"]{
-      --bg:#0b1015;
-      --card:#121820;
-      --text:#e5e7eb;
-      --muted:#9aa4b2;
-      --chip:#182032;
-      --chip-text:#c7d2fe;
-      --accent:#ef4444;
-      --border:#1f2937;
-      --shadow: 0 10px 30px rgba(0,0,0,.35);
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0;
-      background:var(--bg);
-      color:var(--text);
-      font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";
-      letter-spacing:.1px;
-    }
+import React, { useEffect, useMemo, useRef, useState } from "react";
 
-    /* Header */
-    header{
-      position:sticky; top:0; z-index:30;
-      backdrop-filter:saturate(180%) blur(8px);
-      background:color-mix(in lab, var(--bg) 75%, transparent);
-      border-bottom:1px solid var(--border);
-    }
-    .bar{
-      max-width:1200px; margin:auto;
-      display:flex; align-items:center; gap:12px;
-      padding:12px 16px;
-      justify-content:center; /* nur Suche bleibt -> zentriert */
-    }
+const DEMO_RECIPES = [
+  {
+    id: "handkaes",
+    title: "🧀 Handkäs mit Musik",
+    image: "https://images.unsplash.com/photo-1551218808-94e220e084d2?q=80&w=1200&auto=format&fit=crop",
+    time: 120,
+    category: "Vegetarisch",
+    ingredients: [
+      "200–240 g Handkäse (z. B. Harzer Käse)",
+      "3 Zwiebeln",
+      "8 EL Essig (Apfel- oder Weißweinessig empfohlen)",
+      "4 EL Öl (Raps- oder Sonnenblumenöl)",
+      "4 EL Wasser",
+      "Salz",
+      "Pfeffer",
+      "1 TL Kümmel (ganz oder gemahlen)",
+    ],
+    steps: [
+      "Essig, Öl und Wasser in einer Schüssel verrühren. Mit Salz und Pfeffer abschmecken.",
+      "Zwiebeln schälen, halbieren und in feine Ringe oder Würfel schneiden.",
+      "Zwiebeln und Kümmel in die Marinade geben und gut durchmischen.",
+      "Handkäse in eine flache Schale legen und die Marinade darüber gießen, sodass der Käse gut bedeckt ist.",
+      "Abgedeckt im Kühlschrank 1–2 Stunden (oder besser über Nacht) ziehen lassen.",
+      "Mit frischem Bauernbrot, Schwarzbrot oder Brezeln servieren.",
+    ],
+    notes: [
+      "Die 'Musik' im Namen bezieht sich scherzhaft auf die akustischen Nebenwirkungen der Zwiebeln.",
+      "Optional: Mit frischen Kräutern wie Schnittlauch oder Petersilie verfeinern.",
+      "Besonders gut zu einem Apfelwein (Ebbelwoi) oder einem kühlen Bier genießen.",
+    ],
+  },
+];
 
-    .search{
-      flex:1; max-width:720px;
-      display:flex; align-items:center; gap:10px;
-      background:var(--card); border:1px solid var(--border); border-radius:999px; padding:8px 12px; box-shadow:var(--shadow)
-    }
-    .search input{
-      flex:1; border:0; outline:0; background:transparent; color:var(--text);
-      font:inherit; padding:4px;
-    }
-    .btn, .icon-btn{
-      border:1px solid var(--border); background:var(--card); color:var(--text);
-      border-radius:999px; padding:10px 14px; font-weight:600; cursor:pointer; box-shadow:var(--shadow)
-    }
-    .icon-btn{display:inline-flex; align-items:center; gap:8px; padding:10px 12px}
-    .icon{
-      width:20px; height:20px; display:inline-block;
-      mask-repeat:no-repeat; mask-position:center; mask-size:contain; background:currentColor;
-    }
-    .i-heart{mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.1 21.35l-1.1-1.02C5.14 15.24 2 12.36 2 8.98 2 6.4 4.02 4.4 6.6 4.4c1.54 0 3.03.72 3.96 1.87A5.16 5.16 0 0114.52 4.4c2.58 0 4.6 2 4.6 4.58 0 3.38-3.13 6.26-8.96 11.35l-1.06 1.02z"/></svg>');}
-    .i-close{mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.3 5.71L12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.3 9.17 12 2.88 5.71 4.29 4.3 10.59 10.6 16.89 4.3z"/></svg>');}
-    .i-pin{mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2v2l2 4v6l4 4H4l4-4V8l2-4V2z"/></svg>');}
+const ALL_CATEGORIES = ["Alle", "Vegetarisch"];
 
-    /* Chips */
-    nav{
-      max-width:1200px; margin:8px auto 0; padding:0 16px 10px; overflow:auto; white-space:nowrap;
-      display:flex; gap:8px;
-    }
-    .chip{
-      display:inline-flex; align-items:center; gap:8px; padding:8px 12px;
-      border-radius:999px; border:1px solid var(--border); background:var(--chip); color:var(--chip-text);
-      cursor:pointer; user-select:none; font-weight:700; transition:transform .1s ease;
-    }
-    .chip[aria-pressed="true"]{outline:2px solid color-mix(in lab, var(--chip-text), transparent 60%); transform:translateY(-1px)}
-    .chip .dot{width:8px; height:8px; border-radius:50% ; background:currentColor}
+function classNames(...c) {
+  return c.filter(Boolean).join(" ");
+}
 
-    /* Masonry */
-    main{max-width:1200px; margin:6px auto 60px; padding:0 16px}
-    .masonry{ column-gap:16px; }
-    @media (min-width:480px){ .masonry{ column-count:2 } }
-    @media (min-width:768px){ .masonry{ column-count:3 } }
-    @media (min-width:1024px){ .masonry{ column-count:4 } }
-    @media (min-width:1400px){ .masonry{ column-count:5 } }
+export default function RezeptSeite() {
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("Alle");
+  const [activeId, setActiveId] = useState(null);
+  const [hideBar, setHideBar] = useState(false);
+  const lastScroll = useRef(0);
 
-    .card{
-      display:inline-block; width:100%; margin:0 0 16px; position:relative; break-inside:avoid; border-radius:var(--radius);
-      background:var(--card); overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow);
-      transform:translateZ(0);
-    }
-    .card img{width:100%; height:auto; display:block}
-    .card .body{padding:12px}
-    .title{font-weight:800; margin:2px 0 8px; letter-spacing:.2px}
-    .tags{display:flex; flex-wrap:wrap; gap:6px}
-    .tag{font-size:12px; padding:4px 8px; border-radius:999px; background:color-mix(in lab, var(--chip), transparent 0%); color:var(--muted); border:1px dashed var(--border)}
-    .overlay{
-      position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:space-between; gap:8px;
-      padding:10px; opacity:0; transition:opacity .18s ease; background:linear-gradient(to top, rgba(0,0,0,.45), transparent 55%);
-    }
-    .card:hover .overlay, .card:focus-within .overlay{opacity:1}
-    .pill{
-      display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; font-weight:700;
-      background:rgba(255,255,255,.9); color:#111827; border:0; cursor:pointer;
-    }
-    [data-theme="dark"] .pill{background:rgba(17,24,39,.92); color:#e5e7eb; border:1px solid #111827}
+  useEffect(() => {
+    const onScroll = () => {
+      const y = window.scrollY || 0;
+      if (y > lastScroll.current && y > 24) setHideBar(true);
+      else setHideBar(false);
+      lastScroll.current = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
-    .save{margin-left:auto}
-    .saved{color:#ef4444}
-    .empty{ text-align:center; padding:40px 10px; color:var(--muted); }
+  const recipes = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return DEMO_RECIPES.filter((r) => {
+      const matchesCategory = category === "Alle" || r.category === category;
+      const hay = `${r.title} ${r.ingredients.join(" ")}`.toLowerCase();
+      const matchesQuery = !q || hay.includes(q);
+      return matchesCategory && matchesQuery;
+    });
+  }, [query, category]);
 
-    /* Drawer */
-    .drawer{
-      position:fixed; right:16px; bottom:16px; z-index:40; display:flex; gap:10px; align-items:center;
-    }
-    .drawer .bubble{
-      padding:10px 14px; border-radius:999px; background:var(--card); border:1px solid var(--border); box-shadow:var(--shadow); cursor:pointer; display:flex; align-items:center; gap:8px; font-weight:700;
-    }
+  return (
+    <div className="min-h-screen bg-black text-neutral-100 relative">
+      <div className={classNames("fixed left-0 right-0 top-0 z-50 transition-transform duration-300", hideBar ? "-translate-y-full" : "translate-y-0")}> 
+        <div className="mx-auto max-w-6xl px-4 pt-5">
+          <div className="backdrop-blur bg-white/5 border border-white/10 rounded-2xl shadow-lg">
+            <div className="flex items-center gap-2 px-4 py-3">
+              <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Suche nach Rezepten oder Zutaten…" className="w-full bg-transparent outline-none placeholder:text-neutral-400 text-neutral-100" />
+            </div>
+          </div>
+          {/* Kategorie-Chips ohne Rahmen */}
+          <div className="mt-3 overflow-x-auto scrollbar-thin scrollbar-thumb-neutral-700 rounded-2xl bg-transparent">
+            <div className="flex gap-2 p-3">
+              {ALL_CATEGORIES.map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setCategory(c)}
+                  className={classNames(
+                    "rounded-full px-4 py-2 text-sm border transition",
+                    c === category
+                      ? "bg-white text-black border-white"
+                      : "bg-white/5 text-neutral-200 border-white/20 hover:border-white/40"
+                  )}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
-    /* Modal */
-    .modal{
-      position:fixed; inset:0; display:none; place-items:center; padding:24px; z-index:50;
-      background:color-mix(in lab, #000 40%, transparent);
-    }
-    .modal[open]{display:grid}
-    .dialog{
-      width:min(920px, 96vw); max-height:90vh; overflow:auto; border-radius:20px; background:var(--card); color:var(--text);
-      border:1px solid var(--border); box-shadow:var(--shadow);
-      display:grid; grid-template-columns:1fr 1fr;
-    }
-    @media (max-width:820px){ .dialog{grid-template-columns:1fr} }
-    .dialog img{width:100%; height:100%; object-fit:cover}
-    .dialog .pane{padding:18px 18px 22px}
-    .close{
-      position:absolute; top:14px; right:14px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--text);
-      padding:10px; cursor:pointer; box-shadow:var(--shadow)
-    }
-    .pane h2{margin:.2rem 0 .6rem; font-size:1.6rem}
-    .meta{color:var(--muted); margin:0 0 10px}
-    .list{margin:.2rem 0 1rem; padding-left:1.1rem}
-    .list li{margin:.25rem 0}
-    .cta{ display:flex; gap:8px; margin-top:10px; }
-    .cta .btn.primary{background:var(--accent); border-color:transparent; color:white}
-    .visually-hidden{position:absolute!important; height:1px;width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap}
+      <div className="h-[180px]" />
 
-    /* Footer */
-    footer{max-width:1200px; margin:50px auto 40px; padding:0 16px; color:var(--muted); font-size:14px}
-  </style>
-</head>
-<body>
-  <header>
-    <div class="bar" role="banner">
-      <!-- nur noch die Suche im Header -->
-      <form class="search" role="search" id="searchForm">
-        <input id="q" type="search" placeholder="Suche nach Rezepten, Zutaten, Tags…" autocomplete="off" aria-label="Rezepte durchsuchen" />
-        <button class="btn" type="submit">Suchen</button>
-      </form>
-      <!-- Darkmode-Button entfernt -->
-      <!-- Gemerkt-Button im Header entfernt -->
+      <main className="mx-auto max-w-6xl px-4 pb-24 relative z-0">
+        <div className="columns-1 sm:columns-2 lg:columns-3 gap-4">
+          {recipes.map((r) => (
+            <article key={r.id} className="mb-4 break-inside-avoid cursor-pointer group" onClick={() => setActiveId(r.id)}>
+              <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-lg">
+                <img src={r.image} alt={r.title} className="w-full h-auto object-cover" />
+                <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 to-transparent p-3">
+                  <h3 className="text-base font-semibold leading-tight">{r.title}</h3>
+                  <p className="mt-1 text-xs text-neutral-300">{r.category} • {r.time} Min.</p>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </main>
+
+      {activeId && <RecipeModal recipe={DEMO_RECIPES.find((r) => r.id === activeId)!} onClose={() => setActiveId(null)} />}
     </div>
-    <nav aria-label="Kategorien">
-      <button class="chip" data-chip="Alle" aria-pressed="true"><span class="dot"></span>Alle</button>
-      <button class="chip" data-chip="Frühstück"><span class="dot"></span>Frühstück</button>
-      <button class="chip" data-chip="Pasta"><span class="dot"></span>Pasta</button>
-      <button class="chip" data-chip="Vegan"><span class="dot"></span>Vegan</button>
-      <button class="chip" data-chip="Dessert"><span class="dot"></span>Dessert</button>
-      <button class="chip" data-chip="Schnell"><span class="dot"></span>Schnell</button>
-      <button class="chip" data-chip="Gesund"><span class="dot"></span>Gesund</button>
-      <button class="chip" data-chip="Grillen"><span class="dot"></span>Grillen</button>
-      <button class="chip" data-chip="Asiatisch"><span class="dot"></span>Asiatisch</button>
-      <button class="chip" data-chip="Low-Carb"><span class="dot"></span>Low-Carb</button>
-    </nav>
-  </header>
+  );
+}
 
-  <main>
-    <div id="masonry" class="masonry" aria-live="polite"></div>
-    <p id="empty" class="empty" hidden>Keine Treffer. Probiere andere Suchbegriffe oder Kategorien.</p>
-  </main>
+function RecipeModal({ recipe, onClose }) {
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
-  <!-- Schwebeblase (Gemerkt) bleibt -->
-  <div class="drawer" aria-live="polite">
-    <button class="bubble" id="savedBubble"><span class="icon i-heart" aria-hidden="true"></span><span id="savedCount">0</span> gemerkt</button>
-  </div>
-
-  <!-- Modal -->
-  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Rezeptdetails">
-    <div class="dialog">
-      <button class="close" id="closeModal" aria-label="Schließen"><span class="icon i-close" aria-hidden="true"></span></button>
-      <img id="modalImg" alt="" loading="lazy">
-      <div class="pane">
-        <h2 id="modalTitle">Titel</h2>
-        <p class="meta" id="modalMeta"></p>
-        <h3>Zutaten</h3>
-        <ul id="modalIngredients" class="list"></ul>
-        <h3>Zubereitung</h3>
-        <ol id="modalSteps" class="list"></ol>
-        <div class="cta">
-          <button class="btn primary" id="modalSave"><span class="icon i-pin" aria-hidden="true"></span> Merken</button>
-          <button class="btn" id="modalCopy">Link kopieren</button>
+  return (
+    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur flex" onClick={onClose}>
+      <div className="relative m-auto w-full max-w-5xl max-h-[92vh] overflow-y-auto rounded-2xl border border-white/10 bg-neutral-950" onClick={(e) => e.stopPropagation()}>
+        <div className="sticky top-0 flex justify-between items-center border-b border-white/10 bg-neutral-950/95 px-4 py-3">
+          <h2 className="text-lg font-semibold">{recipe.title}</h2>
+          <button onClick={onClose} className="rounded-full border border-white/20 px-3 py-1 text-sm hover:border-white/40">Schließen</button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-4">
+          <div className="overflow-hidden rounded-xl border border-white/10 bg-white/5">
+            <img src={recipe.image} alt={recipe.title} className="w-full h-auto object-cover" />
+          </div>
+          <div>
+            <p className="text-sm text-neutral-300 mb-2">Zubereitungszeit: ca. 10 Min aktiv, 2 Std gesamt</p>
+            <h3 className="mt-4 mb-2 text-base font-semibold">Zutaten</h3>
+            <ul className="list-disc list-inside text-sm text-neutral-200/90 space-y-1">{recipe.ingredients.map((it, i) => <li key={i}>{it}</li>)}</ul>
+            <h3 className="mt-4 mb-2 text-base font-semibold">Zubereitung</h3>
+            <ol className="list-decimal list-inside text-sm text-neutral-200/90 space-y-2">{recipe.steps.map((s, i) => <li key={i}>{s}</li>)}</ol>
+            <h3 className="mt-4 mb-2 text-base font-semibold">Notizen</h3>
+            <ul className="list-disc list-inside text-sm text-neutral-400 space-y-1">{recipe.notes.map((n, i) => <li key={i}>{n}</li>)}</ul>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-
-  <footer>
-    <small>Demo-Projekt. Bilder via <em>picsum.photos</em>. Keine externen Bibliotheken.</small>
-  </footer>
-
-  <script>
-  // ---------- Daten (Demo) ----------
-  const RECIPES = [
-    { id:"r1", title:"Cremige One-Pot Pasta mit Spinat", tags:["Pasta","Schnell","Vegetarisch"], category:"Pasta", time:"20 Min", kcal:520, img:"https://images.unsplash.com/photo-1521389508051-d7ffb5dc8bbf?q=80&w=1200&auto=format&fit=crop", ingredients:["250 g Pasta (z. B. Fusilli)","2 Knoblauchzehen","1 Zwiebel","200 g Babyspinat","250 ml Sahne oder Hafersahne","400 ml Gemüsebrühe","50 g Parmesan","Olivenöl, Salz, Pfeffer"], steps:["Zwiebel & Knoblauch fein hacken, in Olivenöl anschwitzen.","Pasta, Brühe und Sahne zugeben, aufkochen und 10–12 Min. köcheln.","Spinat unterheben, mit Parmesan, Salz & Pfeffer abschmecken."] },
-    { id:"r2", title:"Overnight Oats mit Beeren", tags:["Frühstück","Gesund","Vegan","Schnell"], category:"Frühstück", time:"5 Min + über Nacht", kcal:380, img:"https://images.unsplash.com/photo-1466637574441-749b8f19452f?q=80&w=1200&auto=format&fit=crop", ingredients:["60 g Haferflocken","150 ml Pflanzendrink","1 EL Chiasamen","1 TL Ahornsirup","Beerenmix","Prise Zimt"], steps:["Alles in ein Glas geben, verrühren.","Über Nacht kalt stellen, morgens mit Beeren toppen."] },
-    { id:"r3", title:"Knusprige Tofu-Bowl mit Sesam", tags:["Vegan","Asiatisch","Gesund"], category:"Vegan", time:"25 Min", kcal:460, img:"https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=1200&auto=format&fit=crop", ingredients:["200 g fester Tofu","2 EL Speisestärke","2 EL Sojasauce","1 EL Sesamöl","Gemüse nach Wahl","Reis","Sesam"], steps:["Tofu würfeln, mit Stärke ummanteln, knusprig braten.","Mit Sojasauce & Sesamöl glasieren, auf Reis & Gemüse servieren."] },
-    { id:"r4", title:"Zitronige Lachs-Pasta", tags:["Pasta","Schnell"], category:"Pasta", time:"22 Min", kcal:610, img:"https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop", ingredients:["250 g Pasta","200 g Lachs","1 Bio-Zitrone","100 ml Sahne","Dill"], steps:["Pasta kochen. Lachs würfeln & kurz anbraten.","Sahne & Zitronenabrieb zugeben, mit Dill vollenden."] },
-    { id:"r5", title:"Saftiger Brownie mit Walnüssen", tags:["Dessert","Backen"], category:"Dessert", time:"35 Min", kcal:430, img:"https://images.unsplash.com/photo-1606313564200-e75d5e30476e?q=80&w=1200&auto=format&fit=crop", ingredients:["120 g Butter","150 g Zartbitterschokolade","2 Eier","120 g Zucker","70 g Mehl","Walnüsse"], steps:["Butter & Schokolade schmelzen, Eier & Zucker schaumig schlagen.","Alles mischen, Walnüsse unterheben, 20–22 Min. backen."] },
-    { id:"r6", title:"Bunte Sommer-Salatbowl", tags:["Gesund","Vegan","Schnell","Low-Carb"], category:"Gesund", time:"15 Min", kcal:300, img:"https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=1200&auto=format&fit=crop", ingredients:["Blattsalat","Kirschtomaten","Gurke","Avocado","Kichererbsen","Olivenöl","Zitrone","Salz & Pfeffer"], steps:["Zutaten schneiden, Kichererbsen abspülen.","Mit Zitronen-Olivenöl-Dressing mischen."] },
-    { id:"r7", title:"Scharfe Shakshuka", tags:["Frühstück","Vegetarisch","Asiatisch"], category:"Frühstück", time:"25 Min", kcal:420, img:"https://images.unsplash.com/photo-1512058564366-449a5d2d34b9?q=80&w=1200&auto=format&fit=crop", ingredients:["1 Zwiebel","2 Paprika","2 Knoblauchzehen","1 Dose Tomaten","Chili","4 Eier","Feta","Kreuzkümmel"], steps:["Gemüse anschwitzen, Tomaten & Gewürze zugeben.","Eier in Mulden stocken lassen, mit Feta servieren."] },
-    { id:"r8", title:"Griechischer Joghurt mit Honig & Nüssen", tags:["Dessert","Frühstück","Schnell"], category:"Dessert", time:"3 Min", kcal:280, img:"https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=1200&auto=format&fit=crop", ingredients:["Griechischer Joghurt","Honig","Walnüsse","Zimt"], steps:["Joghurt cremig rühren, Honig & Nüsse darüber, mit Zimt bestreuen."] },
-    { id:"r9", title:"Gegrillte Maiskolben mit Chili-Lime-Butter", tags:["Grillen","Schnell","Vegetarisch"], category:"Grillen", time:"18 Min", kcal:260, img:"https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=1200&auto=format&fit=crop", ingredients:["4 Maiskolben","50 g Butter","Chili","Limette","Salz"], steps:["Mais grillen, Butter mit Chili & Limette verrühren.","Mais damit bestreichen, salzen."] },
-    { id:"r10", title:"Pad Thai mit Garnelen", tags:["Asiatisch","Pasta"], category:"Asiatisch", time:"30 Min", kcal:560, img:"https://images.unsplash.com/photo-1604908554049-1e4f4e7b3d3f?q=80&w=1200&auto=format&fit=crop", ingredients:["Reisnudeln","Garnelen","Ei","Sprossen","Frühlingszwiebel","Tamarinde","Fischsauce","Erdnüsse"], steps:["Nudeln einweichen, Zutaten kurz heiß braten.","Sauce zugeben, mit Erdnüssen toppen."] },
-    { id:"r11", title:"Zoodles mit Pesto (Low-Carb)", tags:["Low-Carb","Gesund","Schnell","Vegan"], category:"Low-Carb", time:"12 Min", kcal:230, img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1200&auto=format&fit=crop", ingredients:["3 Zucchini","Pesto","Kirschtomaten","Pinienkerne"], steps:["Zucchini spiralisieren, kurz schwenken.","Mit Pesto & Tomaten vermengen, Pinienkerne darüber."] },
-    { id:"r12", title:"Vanille-Cheesecake im Glas", tags:["Dessert","Schnell"], category:"Dessert", time:"10 Min", kcal:390, img:"https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=1200&auto=format&fit=crop", ingredients:["Kekskrümel","Butter","Frischkäse","Vanille","Zucker","Sahne"], steps:["Kekse mit Butter mischen, Creme aufschlagen.","Schichten & kalt stellen."] },
-  ];
-
-  // ---------- Utilities ----------
-  const $ = (sel,root=document)=>root.querySelector(sel);
-  const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
-  const state = {
-    query:"",
-    chip:"Alle",
-    saved: new Set(JSON.parse(localStorage.getItem("savedRecipes")||"[]")),
-    theme: localStorage.getItem("theme") || (matchMedia('(prefers-color-scheme: dark)').matches ? "dark" : "light")
-  };
-
-  // Theme anwenden (ohne Button)
-  document.documentElement.setAttribute("data-theme", state.theme);
-
-  function saveState(){
-    localStorage.setItem("savedRecipes", JSON.stringify([...state.saved]));
-    localStorage.setItem("theme", state.theme);
-    updateSavedCount();
-  }
-  function updateSavedCount(){
-    $("#savedCount").textContent = state.saved.size;
-  }
-
-  // ---------- Render ----------
-  const masonry = $("#masonry");
-  const emptyMsg = $("#empty");
-
-  function recipeMatches(r){
-    const q = state.query.trim().toLowerCase();
-    const chip = state.chip;
-    const hay = [r.title, r.category, ...(r.tags||[])].join(" • ").toLowerCase();
-    const textMatch = q ? hay.includes(q) : true;
-    const chipMatch = chip==="Alle" ? true : (r.category===chip || (r.tags||[]).includes(chip));
-    return textMatch && chipMatch;
-  }
-
-  function cardHTML(r){
-    const saved = state.saved.has(r.id);
-    return `
-      <article class="card" tabindex="0" data-id="${r.id}" aria-label="${r.title}">
-        <img src="${r.img}" alt="${r.title}" loading="lazy">
-        <div class="overlay" aria-hidden="true">
-          <button class="pill open" data-id="${r.id}">Öffnen</button>
-          <button class="pill save ${saved?'saved':''}" data-id="${r.id}">
-            <span class="icon i-heart" aria-hidden="true"></span>${saved?'Gemerkt':'Merken'}
-          </button>
-        </div>
-        <div class="body">
-          <div class="title">${r.title}</div>
-          <div class="tags">
-            <span class="tag">${r.time}</span>
-            <span class="tag">${r.kcal} kcal</span>
-            ${r.tags.map(t=>`<span class="tag">${t}</span>`).join("")}
-          </div>
-        </div>
-      </article>`;
-  }
-
-  function render(){
-    const list = RECIPES.filter(recipeMatches);
-    masonry.innerHTML = list.map(cardHTML).join("");
-    emptyMsg.hidden = list.length>0;
-  }
-
-  // ---------- Modal ----------
-  const modal = $("#modal");
-  const modalImg = $("#modalImg");
-  const modalTitle = $("#modalTitle");
-  const modalMeta = $("#modalMeta");
-  const modalIngredients = $("#modalIngredients");
-  const modalSteps = $("#modalSteps");
-  const modalSave = $("#modalSave");
-  const modalCopy = $("#modalCopy");
-
-  function openModal(id){
-    const r = RECIPES.find(x=>x.id===id);
-    if(!r) return;
-    modalImg.src = r.img;
-    modalImg.alt = r.title;
-    modalTitle.textContent = r.title;
-    modalMeta.textContent = `${r.time} • ${r.kcal} kcal • ${r.tags.join(", ")}`;
-    modalIngredients.innerHTML = r.ingredients.map(i=>`<li>${i}</li>`).join("");
-    modalSteps.innerHTML = r.steps.map(s=>`<li>${s}</li>`).join("");
-    modalSave.dataset.id = r.id;
-    modalSave.textContent = state.saved.has(r.id) ? "Gemerkt" : "Merken";
-    modal.setAttribute("open","");
-    setTimeout(()=>$("#closeModal").focus(), 0);
-    document.body.style.overflow="hidden";
-  }
-  function closeModal(){
-    modal.removeAttribute("open");
-    document.body.style.overflow="";
-  }
-
-  // ---------- Events ----------
-  // Suche
-  $("#searchForm").addEventListener("submit", (e)=>{
-    e.preventDefault();
-    state.query = $("#q").value;
-    render();
-  });
-  $("#q").addEventListener("input", debounce(e=>{
-    state.query = e.target.value;
-    render();
-  }, 180));
-
-  // Chips
-  $$(".chip").forEach(ch=>{
-    ch.addEventListener("click", ()=>{
-      $$(".chip").forEach(c=>c.setAttribute("aria-pressed","false"));
-      ch.setAttribute("aria-pressed","true");
-      state.chip = ch.dataset.chip;
-      render();
-    });
-  });
-
-  // Karten-Delegation
-  masonry.addEventListener("click", e=>{
-    const openBtn = e.target.closest(".open");
-    const saveBtn = e.target.closest(".save");
-    const card = e.target.closest(".card");
-    if(openBtn || (card && !saveBtn)){
-      const id = (openBtn?.dataset.id) || card.dataset.id;
-      openModal(id);
-    }
-    if(saveBtn){
-      const id = saveBtn.dataset.id;
-      toggleSave(id);
-      saveBtn.classList.toggle("saved", state.saved.has(id));
-      saveBtn.innerHTML = `<span class="icon i-heart" aria-hidden="true"></span>${state.saved.has(id) ? 'Gemerkt' : 'Merken'}`;
-    }
-  });
-
-  // Keyboard open
-  masonry.addEventListener("keydown", e=>{
-    if(e.key==="Enter"){
-      const card = e.target.closest(".card");
-      if(card) openModal(card.dataset.id);
-    }
-  });
-
-  // Modal
-  $("#closeModal").addEventListener("click", closeModal);
-  modal.addEventListener("click", (e)=>{ if(e.target===modal) closeModal(); });
-  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && modal.hasAttribute("open")) closeModal(); });
-
-  modalSave.addEventListener("click", ()=>{
-    toggleSave(modalSave.dataset.id);
-    modalSave.textContent = state.saved.has(modalSave.dataset.id) ? "Gemerkt" : "Merken";
-  });
-  modalCopy.addEventListener("click", async ()=>{
-    const url = location.href.split("#")[0] + "#"+ modalSave.dataset.id;
-    try{
-      await navigator.clipboard.writeText(url);
-      modalCopy.textContent = "Kopiert!";
-      setTimeout(()=>modalCopy.textContent="Link kopieren", 1200);
-    }catch(err){
-      alert("Konnte nicht kopieren: " + err);
-    }
-  });
-
-  // Gemerkt-Liste über Schwebeblase
-  $("#savedBubble").addEventListener("click", showSavedList);
-  function showSavedList(){
-    const ids = [...state.saved];
-    if(ids.length===0){
-      alert("Noch nichts gemerkt. Klicke auf „Merken“ bei einem Rezept.");
-      return;
-    }
-    state.query = ""; $("#q").value="";
-    state.chip = "Alle"; $$(".chip").forEach(c=>c.setAttribute("aria-pressed", c.dataset.chip==="Alle" ? "true":"false"));
-    const savedSet = new Set(ids);
-    masonry.innerHTML = RECIPES.filter(r=>savedSet.has(r.id)).map(cardHTML).join("");
-    emptyMsg.hidden = true;
-    window.scrollTo({top:0, behavior:"smooth"});
-  }
-
-  // Save
-  function toggleSave(id){
-    state.saved.has(id) ? state.saved.delete(id) : state.saved.add(id);
-    saveState();
-  }
-
-  // Debounce helper
-  function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), ms); }; }
-
-  // Hash-Router
-  window.addEventListener("hashchange", ()=>{
-    const id = location.hash.slice(1);
-    if(id){ openModal(id); }
-  });
-
-  // Init
-  document.documentElement.setAttribute("data-theme", state.theme);
-  render();
-  updateSavedCount();
-  if(location.hash){ openModal(location.hash.slice(1)); }
-  </script>
-</body>
-</html>
+  );
+}
