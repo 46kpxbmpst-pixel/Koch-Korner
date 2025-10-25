@@ -3,400 +3,433 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Dein Kochbuch – HTML (Auto-Kategorien: Vorspeise/Hauptspeise/Nachspeise/Snack/Schnell & Easy/Backen)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Rezeptseite – Pinterest Stil</title>
   <style>
-    .shrinkable { transition: transform 200ms ease, padding 200ms ease; }
-    .shrink { transform: scale(0.95) translateY(-4px); }
-    /* --- Modern Recipe Detail (nur Styling) --- */
-    .glass { background: rgba(20,20,20,.55); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
-    .step-list li { padding: .75rem 1rem; border-radius: .75rem; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.06); }
-    .meta-chip { background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); }
+    :root{
+      --bg: #f7f7f8;
+      --card: #ffffff;
+      --text: #1f2328;
+      --muted: #6b7280;
+      --chip: #eef2ff;
+      --chip-text:#3730a3;
+      --accent:#ef4444;
+      --border:#e5e7eb;
+      --shadow: 0 4px 18px rgba(0,0,0,.08);
+      --radius:16px;
+    }
+    [data-theme="dark"]{
+      --bg:#0b1015;
+      --card:#121820;
+      --text:#e5e7eb;
+      --muted:#9aa4b2;
+      --chip:#182032;
+      --chip-text:#c7d2fe;
+      --accent:#ef4444;
+      --border:#1f2937;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,"Helvetica Neue",Arial,"Noto Sans","Apple Color Emoji","Segoe UI Emoji";
+      letter-spacing:.1px;
+    }
+
+    /* Header */
+    header{
+      position:sticky; top:0; z-index:30;
+      backdrop-filter:saturate(180%) blur(8px);
+      background:color-mix(in lab, var(--bg) 75%, transparent);
+      border-bottom:1px solid var(--border);
+    }
+    .bar{
+      max-width:1200px; margin:auto;
+      display:flex; align-items:center; gap:12px;
+      padding:12px 16px;
+      justify-content:center; /* nur Suche bleibt -> zentriert */
+    }
+
+    .search{
+      flex:1; max-width:720px;
+      display:flex; align-items:center; gap:10px;
+      background:var(--card); border:1px solid var(--border); border-radius:999px; padding:8px 12px; box-shadow:var(--shadow)
+    }
+    .search input{
+      flex:1; border:0; outline:0; background:transparent; color:var(--text);
+      font:inherit; padding:4px;
+    }
+    .btn, .icon-btn{
+      border:1px solid var(--border); background:var(--card); color:var(--text);
+      border-radius:999px; padding:10px 14px; font-weight:600; cursor:pointer; box-shadow:var(--shadow)
+    }
+    .icon-btn{display:inline-flex; align-items:center; gap:8px; padding:10px 12px}
+    .icon{
+      width:20px; height:20px; display:inline-block;
+      mask-repeat:no-repeat; mask-position:center; mask-size:contain; background:currentColor;
+    }
+    .i-heart{mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12.1 21.35l-1.1-1.02C5.14 15.24 2 12.36 2 8.98 2 6.4 4.02 4.4 6.6 4.4c1.54 0 3.03.72 3.96 1.87A5.16 5.16 0 0114.52 4.4c2.58 0 4.6 2 4.6 4.58 0 3.38-3.13 6.26-8.96 11.35l-1.06 1.02z"/></svg>');}
+    .i-close{mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18.3 5.71L12 12l6.3 6.29-1.41 1.42L10.59 13.4 4.29 19.71 2.88 18.3 9.17 12 2.88 5.71 4.29 4.3 10.59 10.6 16.89 4.3z"/></svg>');}
+    .i-pin{mask-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M14 2v2l2 4v6l4 4H4l4-4V8l2-4V2z"/></svg>');}
+
+    /* Chips */
+    nav{
+      max-width:1200px; margin:8px auto 0; padding:0 16px 10px; overflow:auto; white-space:nowrap;
+      display:flex; gap:8px;
+    }
+    .chip{
+      display:inline-flex; align-items:center; gap:8px; padding:8px 12px;
+      border-radius:999px; border:1px solid var(--border); background:var(--chip); color:var(--chip-text);
+      cursor:pointer; user-select:none; font-weight:700; transition:transform .1s ease;
+    }
+    .chip[aria-pressed="true"]{outline:2px solid color-mix(in lab, var(--chip-text), transparent 60%); transform:translateY(-1px)}
+    .chip .dot{width:8px; height:8px; border-radius:50% ; background:currentColor}
+
+    /* Masonry */
+    main{max-width:1200px; margin:6px auto 60px; padding:0 16px}
+    .masonry{ column-gap:16px; }
+    @media (min-width:480px){ .masonry{ column-count:2 } }
+    @media (min-width:768px){ .masonry{ column-count:3 } }
+    @media (min-width:1024px){ .masonry{ column-count:4 } }
+    @media (min-width:1400px){ .masonry{ column-count:5 } }
+
+    .card{
+      display:inline-block; width:100%; margin:0 0 16px; position:relative; break-inside:avoid; border-radius:var(--radius);
+      background:var(--card); overflow:hidden; border:1px solid var(--border); box-shadow:var(--shadow);
+      transform:translateZ(0);
+    }
+    .card img{width:100%; height:auto; display:block}
+    .card .body{padding:12px}
+    .title{font-weight:800; margin:2px 0 8px; letter-spacing:.2px}
+    .tags{display:flex; flex-wrap:wrap; gap:6px}
+    .tag{font-size:12px; padding:4px 8px; border-radius:999px; background:color-mix(in lab, var(--chip), transparent 0%); color:var(--muted); border:1px dashed var(--border)}
+    .overlay{
+      position:absolute; inset:0; display:flex; align-items:flex-end; justify-content:space-between; gap:8px;
+      padding:10px; opacity:0; transition:opacity .18s ease; background:linear-gradient(to top, rgba(0,0,0,.45), transparent 55%);
+    }
+    .card:hover .overlay, .card:focus-within .overlay{opacity:1}
+    .pill{
+      display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px; font-weight:700;
+      background:rgba(255,255,255,.9); color:#111827; border:0; cursor:pointer;
+    }
+    [data-theme="dark"] .pill{background:rgba(17,24,39,.92); color:#e5e7eb; border:1px solid #111827}
+
+    .save{margin-left:auto}
+    .saved{color:#ef4444}
+    .empty{ text-align:center; padding:40px 10px; color:var(--muted); }
+
+    /* Drawer */
+    .drawer{
+      position:fixed; right:16px; bottom:16px; z-index:40; display:flex; gap:10px; align-items:center;
+    }
+    .drawer .bubble{
+      padding:10px 14px; border-radius:999px; background:var(--card); border:1px solid var(--border); box-shadow:var(--shadow); cursor:pointer; display:flex; align-items:center; gap:8px; font-weight:700;
+    }
+
+    /* Modal */
+    .modal{
+      position:fixed; inset:0; display:none; place-items:center; padding:24px; z-index:50;
+      background:color-mix(in lab, #000 40%, transparent);
+    }
+    .modal[open]{display:grid}
+    .dialog{
+      width:min(920px, 96vw); max-height:90vh; overflow:auto; border-radius:20px; background:var(--card); color:var(--text);
+      border:1px solid var(--border); box-shadow:var(--shadow);
+      display:grid; grid-template-columns:1fr 1fr;
+    }
+    @media (max-width:820px){ .dialog{grid-template-columns:1fr} }
+    .dialog img{width:100%; height:100%; object-fit:cover}
+    .dialog .pane{padding:18px 18px 22px}
+    .close{
+      position:absolute; top:14px; right:14px; border-radius:999px; border:1px solid var(--border); background:var(--card); color:var(--text);
+      padding:10px; cursor:pointer; box-shadow:var(--shadow)
+    }
+    .pane h2{margin:.2rem 0 .6rem; font-size:1.6rem}
+    .meta{color:var(--muted); margin:0 0 10px}
+    .list{margin:.2rem 0 1rem; padding-left:1.1rem}
+    .list li{margin:.25rem 0}
+    .cta{ display:flex; gap:8px; margin-top:10px; }
+    .cta .btn.primary{background:var(--accent); border-color:transparent; color:white}
+    .visually-hidden{position:absolute!important; height:1px;width:1px; overflow:hidden; clip:rect(1px,1px,1px,1px); white-space:nowrap}
+
+    /* Footer */
+    footer{max-width:1200px; margin:50px auto 40px; padding:0 16px; color:var(--muted); font-size:14px}
   </style>
 </head>
-<body class="min-h-screen bg-neutral-950 text-neutral-100">
-  <div id="app"></div>
+<body>
+  <header>
+    <div class="bar" role="banner">
+      <!-- nur noch die Suche im Header -->
+      <form class="search" role="search" id="searchForm">
+        <input id="q" type="search" placeholder="Suche nach Rezepten, Zutaten, Tags…" autocomplete="off" aria-label="Rezepte durchsuchen" />
+        <button class="btn" type="submit">Suchen</button>
+      </form>
+      <!-- Darkmode-Button entfernt -->
+      <!-- Gemerkt-Button im Header entfernt -->
+    </div>
+    <nav aria-label="Kategorien">
+      <button class="chip" data-chip="Alle" aria-pressed="true"><span class="dot"></span>Alle</button>
+      <button class="chip" data-chip="Frühstück"><span class="dot"></span>Frühstück</button>
+      <button class="chip" data-chip="Pasta"><span class="dot"></span>Pasta</button>
+      <button class="chip" data-chip="Vegan"><span class="dot"></span>Vegan</button>
+      <button class="chip" data-chip="Dessert"><span class="dot"></span>Dessert</button>
+      <button class="chip" data-chip="Schnell"><span class="dot"></span>Schnell</button>
+      <button class="chip" data-chip="Gesund"><span class="dot"></span>Gesund</button>
+      <button class="chip" data-chip="Grillen"><span class="dot"></span>Grillen</button>
+      <button class="chip" data-chip="Asiatisch"><span class="dot"></span>Asiatisch</button>
+      <button class="chip" data-chip="Low-Carb"><span class="dot"></span>Low-Carb</button>
+    </nav>
+  </header>
+
+  <main>
+    <div id="masonry" class="masonry" aria-live="polite"></div>
+    <p id="empty" class="empty" hidden>Keine Treffer. Probiere andere Suchbegriffe oder Kategorien.</p>
+  </main>
+
+  <!-- Schwebeblase (Gemerkt) bleibt -->
+  <div class="drawer" aria-live="polite">
+    <button class="bubble" id="savedBubble"><span class="icon i-heart" aria-hidden="true"></span><span id="savedCount">0</span> gemerkt</button>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Rezeptdetails">
+    <div class="dialog">
+      <button class="close" id="closeModal" aria-label="Schließen"><span class="icon i-close" aria-hidden="true"></span></button>
+      <img id="modalImg" alt="" loading="lazy">
+      <div class="pane">
+        <h2 id="modalTitle">Titel</h2>
+        <p class="meta" id="modalMeta"></p>
+        <h3>Zutaten</h3>
+        <ul id="modalIngredients" class="list"></ul>
+        <h3>Zubereitung</h3>
+        <ol id="modalSteps" class="list"></ol>
+        <div class="cta">
+          <button class="btn primary" id="modalSave"><span class="icon i-pin" aria-hidden="true"></span> Merken</button>
+          <button class="btn" id="modalCopy">Link kopieren</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <small>Demo-Projekt. Bilder via <em>picsum.photos</em>. Keine externen Bibliotheken.</small>
+  </footer>
 
   <script>
-    // --- Daten ---
-    const RECIPES = [
-      { id: "r1", title: "Cremige Tomaten-Pasta", categories: ["Pasta","Vegetarisch","Schnell & Easy"], ingredients: ["Pasta","Tomate","Sahne","Basilikum","Knoblauch"], image: "https://images.unsplash.com/photo-1526318472351-c75fcf070305?q=80&w=1600&auto=format&fit=crop", time: 20, portions: 2, steps: ["Pasta in Salzwasser kochen.","Knoblauch anrösten, mit Tomaten und Sahne ablöschen.","Mit Salz, Pfeffer und Basilikum abschmecken.","Mit Pasta vermengen und servieren."] },
-      { id: "r2", title: "Zitronen-Lachs vom Blech", categories: ["Fisch","Schnell & Easy"], ingredients: ["Lachs","Zitrone","Olivenöl","Knoblauch","Kartoffeln"], image: "https://images.unsplash.com/photo-1615937691194-97dbd3f30b54?q=80&w=1600&auto=format&fit=crop", time: 30, portions: 2, steps: ["Backofen auf 200°C vorheizen.","Kartoffeln vorschneiden und auf Blech geben.","Lachs mit Zitrone, Öl, Salz & Pfeffer würzen und aufs Blech legen.","Alles gemeinsam backen bis gar."] },
-      { id: "r3", title: "Fluffige Pfannkuchen", categories: ["Frühstück","Dessert","Vegetarisch"], ingredients: ["Mehl","Milch","Ei","Backpulver","Zucker"], image: "https://images.unsplash.com/photo-1495214783159-3503fd1b572d?q=80&w=1600&auto=format&fit=crop", time: 15, portions: 3, steps: ["Teig anrühren (Mehl, Milch, Ei, Backpulver, Zucker).","In Pfanne portionsweise ausbacken.","Mit Ahornsirup oder Beeren servieren."] },
-      { id: "r4", title: "Original Bolognese (Ragù alla Bolognese)", categories: ["Pasta","Fleisch"], ingredients: ["300 g Rinderhackfleisch (am besten aus Bauchlappen oder Hüfte)","150 g Pancetta (durchwachsener Speck, fein gehackt)","50 g Karotte (fein gewürfelt)","50 g Sellerie (fein gewürfelt)","50 g Zwiebel (fein gewürfelt)","5 EL Tomatenmark (oder passierte Tomaten)","½ Glas trockener Weißwein","½ Glas Vollmilch","etwas Fleischbrühe (nach Bedarf)","Salz & Pfeffer","Butter oder Olivenöl (traditionell eher Butter)"], image: "https://images.unsplash.com/photo-1613145993488-5e2b60f02d9a?q=80&w=1600&auto=format&fit=crop", time: 150, portions: 4, steps: ["Speck auslassen – Butter in einem schweren Topf zerlassen, den fein gehackten Pancetta langsam auslassen.","Soffritto – Zwiebel, Karotte und Sellerie dazugeben, sanft anschwitzen, bis das Gemüse weich und leicht goldgelb ist.","Fleisch – Rinderhack dazugeben, krümelig anbraten, bis es seine Farbe verliert.","Ablöschen – Mit Weißwein ablöschen und vollständig verdampfen lassen.","Tomate – Tomatenmark einrühren.","Schmoren – Ein wenig Brühe angießen, Hitze stark reduzieren und mindestens 2 Stunden sanft köcheln lassen. Immer wieder etwas Brühe nachgießen, wenn es zu trocken wird.","Milch – Gegen Ende die Milch unterrühren, damit die Sauce milder und cremiger wird.","Abschmecken – Mit Salz und Pfeffer würzen."] },
+  // ---------- Daten (Demo) ----------
+  const RECIPES = [
+    { id:"r1", title:"Cremige One-Pot Pasta mit Spinat", tags:["Pasta","Schnell","Vegetarisch"], category:"Pasta", time:"20 Min", kcal:520, img:"https://images.unsplash.com/photo-1521389508051-d7ffb5dc8bbf?q=80&w=1200&auto=format&fit=crop", ingredients:["250 g Pasta (z. B. Fusilli)","2 Knoblauchzehen","1 Zwiebel","200 g Babyspinat","250 ml Sahne oder Hafersahne","400 ml Gemüsebrühe","50 g Parmesan","Olivenöl, Salz, Pfeffer"], steps:["Zwiebel & Knoblauch fein hacken, in Olivenöl anschwitzen.","Pasta, Brühe und Sahne zugeben, aufkochen und 10–12 Min. köcheln.","Spinat unterheben, mit Parmesan, Salz & Pfeffer abschmecken."] },
+    { id:"r2", title:"Overnight Oats mit Beeren", tags:["Frühstück","Gesund","Vegan","Schnell"], category:"Frühstück", time:"5 Min + über Nacht", kcal:380, img:"https://images.unsplash.com/photo-1466637574441-749b8f19452f?q=80&w=1200&auto=format&fit=crop", ingredients:["60 g Haferflocken","150 ml Pflanzendrink","1 EL Chiasamen","1 TL Ahornsirup","Beerenmix","Prise Zimt"], steps:["Alles in ein Glas geben, verrühren.","Über Nacht kalt stellen, morgens mit Beeren toppen."] },
+    { id:"r3", title:"Knusprige Tofu-Bowl mit Sesam", tags:["Vegan","Asiatisch","Gesund"], category:"Vegan", time:"25 Min", kcal:460, img:"https://images.unsplash.com/photo-1511690656952-34342bb7c2f2?q=80&w=1200&auto=format&fit=crop", ingredients:["200 g fester Tofu","2 EL Speisestärke","2 EL Sojasauce","1 EL Sesamöl","Gemüse nach Wahl","Reis","Sesam"], steps:["Tofu würfeln, mit Stärke ummanteln, knusprig braten.","Mit Sojasauce & Sesamöl glasieren, auf Reis & Gemüse servieren."] },
+    { id:"r4", title:"Zitronige Lachs-Pasta", tags:["Pasta","Schnell"], category:"Pasta", time:"22 Min", kcal:610, img:"https://images.unsplash.com/photo-1512058564366-18510be2db19?q=80&w=1200&auto=format&fit=crop", ingredients:["250 g Pasta","200 g Lachs","1 Bio-Zitrone","100 ml Sahne","Dill"], steps:["Pasta kochen. Lachs würfeln & kurz anbraten.","Sahne & Zitronenabrieb zugeben, mit Dill vollenden."] },
+    { id:"r5", title:"Saftiger Brownie mit Walnüssen", tags:["Dessert","Backen"], category:"Dessert", time:"35 Min", kcal:430, img:"https://images.unsplash.com/photo-1606313564200-e75d5e30476e?q=80&w=1200&auto=format&fit=crop", ingredients:["120 g Butter","150 g Zartbitterschokolade","2 Eier","120 g Zucker","70 g Mehl","Walnüsse"], steps:["Butter & Schokolade schmelzen, Eier & Zucker schaumig schlagen.","Alles mischen, Walnüsse unterheben, 20–22 Min. backen."] },
+    { id:"r6", title:"Bunte Sommer-Salatbowl", tags:["Gesund","Vegan","Schnell","Low-Carb"], category:"Gesund", time:"15 Min", kcal:300, img:"https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=1200&auto=format&fit=crop", ingredients:["Blattsalat","Kirschtomaten","Gurke","Avocado","Kichererbsen","Olivenöl","Zitrone","Salz & Pfeffer"], steps:["Zutaten schneiden, Kichererbsen abspülen.","Mit Zitronen-Olivenöl-Dressing mischen."] },
+    { id:"r7", title:"Scharfe Shakshuka", tags:["Frühstück","Vegetarisch","Asiatisch"], category:"Frühstück", time:"25 Min", kcal:420, img:"https://images.unsplash.com/photo-1512058564366-449a5d2d34b9?q=80&w=1200&auto=format&fit=crop", ingredients:["1 Zwiebel","2 Paprika","2 Knoblauchzehen","1 Dose Tomaten","Chili","4 Eier","Feta","Kreuzkümmel"], steps:["Gemüse anschwitzen, Tomaten & Gewürze zugeben.","Eier in Mulden stocken lassen, mit Feta servieren."] },
+    { id:"r8", title:"Griechischer Joghurt mit Honig & Nüssen", tags:["Dessert","Frühstück","Schnell"], category:"Dessert", time:"3 Min", kcal:280, img:"https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=1200&auto=format&fit=crop", ingredients:["Griechischer Joghurt","Honig","Walnüsse","Zimt"], steps:["Joghurt cremig rühren, Honig & Nüsse darüber, mit Zimt bestreuen."] },
+    { id:"r9", title:"Gegrillte Maiskolben mit Chili-Lime-Butter", tags:["Grillen","Schnell","Vegetarisch"], category:"Grillen", time:"18 Min", kcal:260, img:"https://images.unsplash.com/photo-1563245372-f21724e3856d?q=80&w=1200&auto=format&fit=crop", ingredients:["4 Maiskolben","50 g Butter","Chili","Limette","Salz"], steps:["Mais grillen, Butter mit Chili & Limette verrühren.","Mais damit bestreichen, salzen."] },
+    { id:"r10", title:"Pad Thai mit Garnelen", tags:["Asiatisch","Pasta"], category:"Asiatisch", time:"30 Min", kcal:560, img:"https://images.unsplash.com/photo-1604908554049-1e4f4e7b3d3f?q=80&w=1200&auto=format&fit=crop", ingredients:["Reisnudeln","Garnelen","Ei","Sprossen","Frühlingszwiebel","Tamarinde","Fischsauce","Erdnüsse"], steps:["Nudeln einweichen, Zutaten kurz heiß braten.","Sauce zugeben, mit Erdnüssen toppen."] },
+    { id:"r11", title:"Zoodles mit Pesto (Low-Carb)", tags:["Low-Carb","Gesund","Schnell","Vegan"], category:"Low-Carb", time:"12 Min", kcal:230, img:"https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1200&auto=format&fit=crop", ingredients:["3 Zucchini","Pesto","Kirschtomaten","Pinienkerne"], steps:["Zucchini spiralisieren, kurz schwenken.","Mit Pesto & Tomaten vermengen, Pinienkerne darüber."] },
+    { id:"r12", title:"Vanille-Cheesecake im Glas", tags:["Dessert","Schnell"], category:"Dessert", time:"10 Min", kcal:390, img:"https://images.unsplash.com/photo-1499636136210-6f4ee915583e?q=80&w=1200&auto=format&fit=crop", ingredients:["Kekskrümel","Butter","Frischkäse","Vanille","Zucker","Sahne"], steps:["Kekse mit Butter mischen, Creme aufschlagen.","Schichten & kalt stellen."] },
+  ];
 
-      // --- Eingebundene Rezepte aus deiner Liste ---
-      { id: "r5", title: "Hackfleisch-Sauerkrautsuppe", categories: ["Suppe","Fleisch"], ingredients: [
-        "2 große Zwiebeln","250 g Hackfleisch","2–3 Gewürzgurken","3 gehäufte EL Sauerkraut","3 EL Tomatenmark","1 Liter Gemüse- oder Fleischbrühe","Salz und Pfeffer","Petersilie oder Schnittlauch zum Verfeinern",
-        "Dip: ½ Becher saure Sahne","Dip: 2–3 EL Mayonnaise","Dip: 1–2 Knoblauchzehen","Dip: 1 TL Senf","Dip: Salz und Pfeffer"
-      ], image: "https://images.unsplash.com/photo-1547592166-23ac45744acd?q=80&w=1600&auto=format&fit=crop", time: 90, portions: 4, steps: [
-        "Zwiebeln und Hackfleisch in einem Topf anbraten. Mit Brühe ablöschen und aufkochen.",
-        "Gewürzgurken, Tomatenmark und Sauerkraut hinzufügen. Ca. 1–2 Stunden köcheln lassen.",
-        "Mit Salz, Pfeffer und Kräutern abschmecken.",
-        "Für den Dip saure Sahne, Mayonnaise, Knoblauch und Senf verrühren. Mit Salz und Pfeffer würzen und zur Suppe servieren."
-      ] },
+  // ---------- Utilities ----------
+  const $ = (sel,root=document)=>root.querySelector(sel);
+  const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
+  const state = {
+    query:"",
+    chip:"Alle",
+    saved: new Set(JSON.parse(localStorage.getItem("savedRecipes")||"[]")),
+    theme: localStorage.getItem("theme") || (matchMedia('(prefers-color-scheme: dark)').matches ? "dark" : "light")
+  };
 
-      { id: "r6", title: "Römische Zucchini", categories: ["Gemüse & Herzhaftes","Backofen","Fleisch"], ingredients: [
-        "50 g Speckwürfel","1 EL Öl","1 Zwiebel","1 Knoblauchzehe","500 g Tomatensoße","1 EL Oregano","Salz und Pfeffer","500 g Zucchini","2 EL Semmelmehl","4–5 EL gehackte Kräuter (Petersilie, Oregano, Rosmarin)","40 g Parmesan","6 EL Sahne oder Crème fraîche"
-      ], image: "https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=1600&auto=format&fit=crop", time: 50, portions: 3, steps: [
-        "Speck in Öl anbraten, Zwiebel und Knoblauch zufügen und kurz andünsten.",
-        "Tomatensoße, Oregano, Salz und Pfeffer zugeben, einköcheln lassen, in eine Auflaufform füllen.",
-        "Zucchini längs halbieren, leicht salzen.",
-        "Semmelmehl, Kräuter, Parmesan und Sahne zu einer Paste verrühren und auf die Zucchini streichen.",
-        "In der Soße bei 230 °C ca. 25 Minuten backen."
-      ] },
+  // Theme anwenden (ohne Button)
+  document.documentElement.setAttribute("data-theme", state.theme);
 
-      { id: "r7", title: "Grüne Bohnen mit Knoblauch", categories: ["Gemüse & Herzhaftes","Vegetarisch","Schnell & Easy"], ingredients: [
-        "750 g grüne Bohnen","150 g Crème fraîche","2 Knoblauchzehen","1 EL Petersilie","Salz und Pfeffer"
-      ], image: "https://images.unsplash.com/photo-1510626176961-4b57d4fbad03?q=80&w=1600&auto=format&fit=crop", time: 30, portions: 4, steps: [
-        "Bohnen abfädeln, waschen, in Stücke schneiden und 15 Minuten in Salzwasser garen.",
-        "Crème fraîche erhitzen, Knoblauch pressen, Petersilie zufügen.",
-        "Mit Salz und Pfeffer würzen, Bohnen untermengen und kurz erhitzen."
-      ] },
+  function saveState(){
+    localStorage.setItem("savedRecipes", JSON.stringify([...state.saved]));
+    localStorage.setItem("theme", state.theme);
+    updateSavedCount();
+  }
+  function updateSavedCount(){
+    $("#savedCount").textContent = state.saved.size;
+  }
 
-      { id: "r8", title: "Kohlrabi in Kresse-Creme", categories: ["Gemüse & Herzhaftes","Vegetarisch","Schnell & Easy"], ingredients: [
-        "1 kg Kohlrabi (mit Herzblättern)","150 g Crème fraîche","3 EL Kresse","Salz, Pfeffer, Muskat","Etwas Zitronensaft"
-      ], image: "https://images.unsplash.com/photo-1505577058444-a3dab90d4253?q=80&w=1600&auto=format&fit=crop", time: 30, portions: 4, steps: [
-        "Kohlrabi schälen, in Stifte schneiden. Herzblätter fein schneiden.",
-        "In Salzwasser 8–10 Minuten garen, abgießen.",
-        "Crème fraîche erhitzen, Kresse und Gewürze einrühren.",
-        "Kohlrabi hinzufügen, abschmecken und servieren."
-      ] },
+  // ---------- Render ----------
+  const masonry = $("#masonry");
+  const emptyMsg = $("#empty");
 
-      { id: "r9", title: "Bandnudeln mit Spinat-Sahne", categories: ["Pasta","Vegetarisch","Schnell & Easy"], ingredients: [
-        "500 g Blattspinat (frisch oder TK)","1 kleine Zwiebel","1 Knoblauchzehe","400 g Bandnudeln","1 EL Öl","1 EL Pinienkerne (optional)","200 g Sahne","Salz und Pfeffer","2 EL Parmesan"
-      ], image: "https://images.unsplash.com/photo-1522184216316-0b0a99e3184b?q=80&w=1600&auto=format&fit=crop", time: 30, portions: 3, steps: [
-        "Spinat putzen. Nudeln in Salzwasser kochen.",
-        "Zwiebel und Knoblauch in Öl glasig dünsten.",
-        "Spinat und Pinienkerne zugeben, kurz mitdünsten.",
-        "Sahne hinzufügen, würzen und cremig einkochen.",
-        "Nudeln abgießen, unterheben, mit Parmesan servieren."
-      ] },
+  function recipeMatches(r){
+    const q = state.query.trim().toLowerCase();
+    const chip = state.chip;
+    const hay = [r.title, r.category, ...(r.tags||[])].join(" • ").toLowerCase();
+    const textMatch = q ? hay.includes(q) : true;
+    const chipMatch = chip==="Alle" ? true : (r.category===chip || (r.tags||[]).includes(chip));
+    return textMatch && chipMatch;
+  }
 
-      { id: "r10", title: "Chili con Carne", categories: ["Fleisch","Eintopf"], ingredients: [
-        "500 g Hackfleisch","500 ml passierte Tomaten","2 rote Paprika","2 große Zwiebeln","1 Dose Mais","2 Dosen Kidneybohnen","1 Packung Chili-Gewürzmischung","Salz, Pfeffer, Zucker oder Ketchup","Öl zum Braten"
-      ], image: "https://images.unsplash.com/photo-1551183053-bf91a1d81141?q=80&w=1600&auto=format&fit=crop", time: 60, portions: 4, steps: [
-        "Hackfleisch in Öl anbraten.",
-        "Zwiebeln und Paprika zufügen, würzen.",
-        "Tomaten, Bohnen und Gewürze zugeben, 30–40 Minuten köcheln lassen.",
-        "Mit Zucker oder Ketchup abschmecken, Mais kurz unterrühren."
-      ] },
-
-      { id: "r11", title: "Partybrötchen", categories: ["Snack","Backofen"], ingredients: [
-        "1 Packung Brötchen (6 Stück)","2 Becher Schmand","1 Tüte geriebener Käse","Belag nach Geschmack: Salami, Schinken, Pilze, Ananas, Paprika, Zwiebeln"
-      ], image: "https://images.unsplash.com/photo-1516685018646-549198525c1b?q=80&w=1600&auto=format&fit=crop", time: 25, portions: 6, steps: [
-        "Schmand mit Käse und Zutaten mischen.",
-        "Auf Brötchenhälften streichen.",
-        "Bei 180 °C ca. 15 Minuten goldbraun backen."
-      ] },
-
-      { id: "r12", title: "Gedeckte Apfeltorte", categories: ["Kuchen & Torten","Dessert","Backen","Vegetarisch"], ingredients: [
-        "Teig: 150 g Margarine","150 g Zucker","1 Ei","2 TL Backpulver","1 Päckchen Vanillezucker","300 g Mehl",
-        "Füllung: ca. 1 kg Äpfel","1 Prise Zimt"
-      ], image: "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1600&auto=format&fit=crop", time: 95, portions: 12, steps: [
-        "Äpfel schälen, entkernen, würfeln und mit Zimt mischen.",
-        "Zutaten für den Teig verkneten.",
-        "⅔ Teig in Springform geben, Boden & Rand formen.",
-        "Äpfel einfüllen, restlichen Teig ausrollen und als Deckel auflegen.",
-        "Bei 175 °C Umluft ca. 70 Minuten backen."
-      ] },
-
-      { id: "r13", title: "Buttermilchschnitten", categories: ["Kuchen & Torten","Dessert","Backen"], ingredients: [
-        "Teig: 3 Eier","3 Tassen Zucker (nach Geschmack reduzieren)","1 Päckchen Vanillezucker","4 Tassen Mehl","1 Päckchen Backpulver","2 Tassen Buttermilch",
-        "Belag: 2 Tassen Kokosflocken","½ Tasse Zucker",
-        "Guss: 200 g Sahne","150 g Butter"
-      ], image: "https://images.unsplash.com/photo-1542826438-82f4d1f6086b?q=80&w=1600&auto=format&fit=crop", time: 40, portions: 20, steps: [
-        "Eier, Zucker, Vanillezucker verrühren. Mehl, Backpulver, Buttermilch zugeben.",
-        "Auf Blech geben, mit Kokos-Zucker-Mischung bestreuen.",
-        "Bei 180 °C ca. 20 Minuten backen.",
-        "Guss aus Sahne und Butter kochen und über den heißen Kuchen gießen."
-      ] },
-
-      { id: "r14", title: "Käsekuchen (Opa)", categories: ["Kuchen & Torten","Dessert","Backen"], ingredients: [
-        "Teig: 250 g Mehl","125 g Butter","30 g Zucker","1 Eigelb","1 Messerspitze Salz","2 EL Wasser",
-        "Füllung: 750 g Quark (halb Mager-, halb Vollfettquark)","½ Tasse Öl","300 g Zucker","3 Eigelb","40 g Speisestärke","1 Päckchen Vanillezucker","⅛ l Milch","3–4 Eiweiß"
-      ], image: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?q=80&w=1600&auto=format&fit=crop", time: 150, portions: 12, steps: [
-        "Teigzutaten verkneten, 1 Stunde kalt stellen.",
-        "Quarkmasse anrühren, Eiweiß steif schlagen und unterheben.",
-        "Teig ausrollen, Form auskleiden, Füllung einfüllen.",
-        "Bei 180 °C ca. 50–60 Minuten backen.",
-        "Im ausgeschalteten Ofen abkühlen lassen."
-      ] },
-
-      { id: "r15", title: "Johannisbeerkuchen", categories: ["Kuchen & Torten","Dessert","Backen"], ingredients: [
-        "Boden: 4 Eier","125 g Zucker","180 g Mehl","9 EL Öl","½ Päckchen Backpulver",
-        "Belag: Johannisbeeren nach Belieben","2 Becher Crème fraîche","1 Päckchen Vanillezucker","2 Beutel Sahnesteif","60 g Puderzucker"
-      ], image: "https://images.unsplash.com/photo-1490323948794-cc6dde6e8e2a?q=80&w=1600&auto=format&fit=crop", time: 55, portions: 12, steps: [
-        "Teigzutaten verrühren, in gefettete Form geben.",
-        "Bei 175 °C ca. 30 Minuten backen, abkühlen lassen.",
-        "Crème fraîche mit Vanillezucker, Sahnesteif, Puderzucker verrühren.",
-        "Johannisbeeren unterheben und auf dem Boden verteilen."
-      ] },
-
-      { id: "r16", title: "Streuselkuchen", categories: ["Kuchen & Torten","Dessert","Backen","Hefe"], ingredients: [
-        "Hefeteig: 1 Würfel Hefe","500 g Mehl","¼ l Milch","125 g Margarine","125 g Zucker","1 Prise Salz","1 Ei",
-        "Streusel: 200 g Mehl","200 g Zucker","100 g Mondamin (oder Mehl)","200 g Butter","1 Prise Salz","1 Prise Zimt"
-      ], image: "https://images.unsplash.com/photo-1523986371872-9d3ba2e2f642?q=80&w=1600&auto=format&fit=crop", time: 90, portions: 20, steps: [
-        "Mehl in Schüssel geben, Vertiefung formen. Hefe in Milch mit Zucker auflösen, hineingeben, 15 Minuten gehen lassen.",
-        "Restliche Zutaten einarbeiten, 15 Minuten gehen lassen.",
-        "Streuselzutaten verkneten.",
-        "Teig auf Blech ausrollen, ggf. mit Obst belegen, Streusel darüber.",
-        "Bei 180 °C ca. 30 Minuten backen."
-      ] },
-
-      { id: "r17", title: "Marmorkuchen", categories: ["Kuchen & Torten","Dessert","Backen"], ingredients: [
-        "250 g Butter","250 g Zucker","4 Eier","350 g Mehl","1 Päckchen Backpulver","1 Päckchen Vanillezucker","1 EL Rum","250 ml Milch","3 EL Kakao","Puderzucker"
-      ], image: "https://images.unsplash.com/photo-1505259839540-04105c3d63be?q=80&w=1600&auto=format&fit=crop", time: 80, portions: 12, steps: [
-        "Butter, Zucker, Vanillezucker und Rum schaumig rühren.",
-        "Eier einzeln zugeben, Mehl und Backpulver mit Milch abwechselnd einrühren.",
-        "Teig halbieren, eine Hälfte mit Kakao mischen.",
-        "Hellen und dunklen Teig abwechselnd in Form geben, marmorieren.",
-        "Bei 175 °C ca. 60 Minuten backen, abkühlen lassen, mit Puderzucker bestreuen."
-      ] },
-
-      { id: "r18", title: "Stachelbeertorte (nach Oma Wüst)", categories: ["Kuchen & Torten","Dessert","Backen"], ingredients: [
-        "Boden: 100 g Butter","100 g Zucker","1 Päckchen Vanillezucker","4 Eigelb","1 TL Backpulver","125 g Mehl",
-        "Deckel: 4 Eiweiß","150 g Zucker","100 g gehobelte Mandeln",
-        "Füllung: 330 g Stachelbeeren (Glas)","1 Tortenguss klar","500 ml Sahne","2 Päckchen Vanillezucker","2 Päckchen Sahnesteif"
-      ], image: "https://images.unsplash.com/photo-1499028344343-cd173ffc68a9?q=80&w=1600&auto=format&fit=crop", time: 135, portions: 12, steps: [
-        "Butter, Zucker, Vanillezucker cremig rühren, Eigelb zugeben, Mehl und Backpulver einarbeiten.",
-        "Auf 2 Formen verteilen.",
-        "Eiweiß mit Zucker steif schlagen, aufstreichen, Mandeln daraufgeben.",
-        "Bei 175 °C ca. 30 Minuten backen.",
-        "Einen Boden mit Stachelbeeren und Tortenguss belegen, Sahne aufschlagen und daraufgeben.",
-        "Zweiten Boden in Stücke schneiden und als Deckel auflegen."
-      ] }
-    ];
-
-    // --- Auto-Kategorien (stark reduziert) ---
-    const ALLOWED_CATS = ["Vorspeise","Hauptspeise","Nachspeise","Snack","Schnell & Easy","Backen"];
-    function ensureRecipeCategories(recipe){
-      const cats = new Set();
-      const text = (recipe.title + " " + recipe.ingredients.join(" ")).toLowerCase();
-      if (Number(recipe.time) <= 30) cats.add("Schnell & Easy");
-      if (/(suppe|salat|vorspeise)/.test(text)) cats.add("Vorspeise");
-      if (/(haupt|fleisch|fisch|pasta|auflauf|gericht|eintopf|braten|pfanne)/.test(text)) cats.add("Hauptspeise");
-      if (/(kuchen|torte|dessert|nachspeise|pudding|süß|tiramisu|mousse)/.test(text)) cats.add("Nachspeise");
-      if (/(snack|brötchen|fingerfood|toast|sandwich|wrap)/.test(text)) cats.add("Snack");
-      if (/(backen|kuchen|torte|brot|gebäck|plätzchen|hefeteig|blech)/.test(text)) cats.add("Backen");
-      // Nur erlaubte Kategorien zurückgeben
-      return Array.from(cats).filter(c => ALLOWED_CATS.includes(c));
-    }
-
-    const ENRICHED_RECIPES = RECIPES.map(r => ({ ...r, categories: ensureRecipeCategories(r) }));
-    function deriveCategoryPool(){ return ALLOWED_CATS; }
-    let CATEGORIES = deriveCategoryPool(ENRICHED_RECIPES);
-
-    // --- State ---
-    let query = "";
-    let activeCats = [];
-    let selectedRecipe = null;
-
-    // --- Helpers ---
-    function filterRecipes(q, cats) {
-      const s = (q || "").trim().toLowerCase();
-      return ENRICHED_RECIPES.filter(r => {
-        const matchesQuery = !s || r.title.toLowerCase().includes(s) || r.ingredients.join(" ").toLowerCase().includes(s) || r.categories.join(" ").toLowerCase().includes(s);
-        const matchesCats = cats.length === 0 || cats.every(c => r.categories.includes(c));
-        return matchesQuery && matchesCats;
-      });
-    }
-
-    function escapeHtml(str){return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;').replace(/'/g,'&#39;');}
-
-    // --- Rendering ---
-    function renderApp(){
-      const root = document.getElementById('app');
-      root.innerHTML = selectedRecipe ? renderDetail(selectedRecipe) : renderHome();
-      if(selectedRecipe){ bindDetailEvents(); } else { bindHomeEvents(); }
-    }
-
-    function renderHome(){
-      const showResults = query.trim().length > 0 || activeCats.length > 0;
-      const filtered = filterRecipes(query, activeCats);
-      return `
-        <div class="min-h-screen">
-          <!-- HERO -->
-          <section class="relative h-[50vh] min-h-[360px] w-full">
-            <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?q=80&w=2400&auto=format&fit=crop" alt="Hero" class="absolute inset-0 h-full w-full object-cover" />
-            <div class="absolute inset-0 bg-black/40"></div>
-
-            <!-- Suche + Kategorien (sticky) -->
-            <div class="sticky top-0 z-30 flex w-full flex-col items-center justify-center shrinkable" id="searchWrap">
-              <div class="mx-4 mt-4 w-full max-w-3xl py-4" id="searchPad">
-                <div class="flex items-center gap-2 rounded-2xl bg-neutral-900/70 backdrop-blur-md shadow-lg ring-1 ring-neutral-700 px-4 py-3">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 opacity-70"><path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 4.23 12.014l3.753 3.753a.75.75 0 1 0 1.06-1.06l-3.752-3.754A6.75 6.75 0 0 0 10.5 3.75Zm-5.25 6.75a5.25 5.25 0 1 1 10.5 0 5.25 5.25 0 0 1-10.5 0Z" clip-rule="evenodd"/></svg>
-                  <input id="searchInput" value="${escapeHtml(query)}" placeholder="Rezepte oder Zutaten suchen…" class="w-full bg-transparent placeholder-white/80 text-white caret-white focus:outline-none text-base md:text-lg" />
-                  ${(query || activeCats.length>0)?`<button id="resetBtn" class="rounded-xl px-3 py-1 text-sm font-medium text-neutral-100 hover:bg-white/10">Zurücksetzen</button>`:''}
-                </div>
-              </div>
-
-              <!-- Kategorien (fixe Liste) -->
-              <div class="mt-4 z-20">
-                <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-center gap-2 px-4">
-                  ${CATEGORIES.map(c=>{
-                    const active = activeCats.includes(c);
-                    return `<button data-cat="${c}" class="rounded-full px-4 py-2 text-sm font-medium shadow ring-1 backdrop-blur-md transition ${active? 'bg-neutral-200 text-neutral-900 ring-neutral-300':'bg-black/40 text-neutral-100 ring-white/20 hover:bg-black/30'}">${c}</button>`;
-                  }).join('')}
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Ergebnisse / Vorschläge -->
-          <main class="mx-auto -mt-10 w-full max-w-6xl px-4 pb-24">
-            <div class="mb-6 flex items-center justify-between">
-              <h2 class="text-xl font-semibold tracking-tight">${showResults? 'Ergebnisse':'Beliebte Rezepte'}</h2>
-              ${showResults? `<p class="text-sm text-neutral-400">${filtered.length} Rezept${filtered.length===1? '':'e'} gefunden</p>`: ''}
-            </div>
-            <div class="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              ${(showResults? filtered: ENRICHED_RECIPES).map(r=>renderCard(r)).join('')}
-            </div>
-          </main>
-
-          <!-- Footer -->
-          <footer class="border-t border-neutral-800 bg-neutral-900/70 backdrop-blur">
-            <div class="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 px-4 py-8 text-sm text-neutral-400 md:flex-row">
-              <p>© ${new Date().getFullYear()} Dein Kochbuch</p>
-              <div class="flex items-center gap-3">
-                <a class="hover:underline" href="#">Impressum</a>
-                <a class="hover:underline" href="#">Datenschutz</a>
-                <a class="hover:underline" href="#">Kontakt</a>
-              </div>
-            </div>
-          </footer>
-        </div>`;
-    }
-
-    function renderCard(r){
-      return `
-        <article class="group cursor-pointer overflow-hidden rounded-2xl bg-neutral-900 shadow-sm ring-1 ring-neutral-800" data-open="${r.id}">
-          <div class="relative aspect-[4/3] w-full overflow-hidden">
-            <img src="${r.image}" alt="${escapeHtml(r.title)}" class="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/0 to-transparent"></div>
-            <div class="absolute bottom-2 left-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white backdrop-blur-md">${r.time} Min • ${r.portions} Port.</div>
+  function cardHTML(r){
+    const saved = state.saved.has(r.id);
+    return `
+      <article class="card" tabindex="0" data-id="${r.id}" aria-label="${r.title}">
+        <img src="${r.img}" alt="${r.title}" loading="lazy">
+        <div class="overlay" aria-hidden="true">
+          <button class="pill open" data-id="${r.id}">Öffnen</button>
+          <button class="pill save ${saved?'saved':''}" data-id="${r.id}">
+            <span class="icon i-heart" aria-hidden="true"></span>${saved?'Gemerkt':'Merken'}
+          </button>
+        </div>
+        <div class="body">
+          <div class="title">${r.title}</div>
+          <div class="tags">
+            <span class="tag">${r.time}</span>
+            <span class="tag">${r.kcal} kcal</span>
+            ${r.tags.map(t=>`<span class="tag">${t}</span>`).join("")}
           </div>
-          <div class="space-y-2 p-4">
-            <h3 class="line-clamp-2 text-base font-semibold leading-snug">${escapeHtml(r.title)}</h3>
-            <div class="flex flex-wrap gap-1">
-              ${r.categories.slice(0,3).map(c=>`<span class="rounded-full bg-neutral-800 px-2 py-1 text-xs text-neutral-300">${c}</span>`).join('')}
-            </div>
-          </div>
-        </article>`;
+        </div>
+      </article>`;
+  }
+
+  function render(){
+    const list = RECIPES.filter(recipeMatches);
+    masonry.innerHTML = list.map(cardHTML).join("");
+    emptyMsg.hidden = list.length>0;
+  }
+
+  // ---------- Modal ----------
+  const modal = $("#modal");
+  const modalImg = $("#modalImg");
+  const modalTitle = $("#modalTitle");
+  const modalMeta = $("#modalMeta");
+  const modalIngredients = $("#modalIngredients");
+  const modalSteps = $("#modalSteps");
+  const modalSave = $("#modalSave");
+  const modalCopy = $("#modalCopy");
+
+  function openModal(id){
+    const r = RECIPES.find(x=>x.id===id);
+    if(!r) return;
+    modalImg.src = r.img;
+    modalImg.alt = r.title;
+    modalTitle.textContent = r.title;
+    modalMeta.textContent = `${r.time} • ${r.kcal} kcal • ${r.tags.join(", ")}`;
+    modalIngredients.innerHTML = r.ingredients.map(i=>`<li>${i}</li>`).join("");
+    modalSteps.innerHTML = r.steps.map(s=>`<li>${s}</li>`).join("");
+    modalSave.dataset.id = r.id;
+    modalSave.textContent = state.saved.has(r.id) ? "Gemerkt" : "Merken";
+    modal.setAttribute("open","");
+    setTimeout(()=>$("#closeModal").focus(), 0);
+    document.body.style.overflow="hidden";
+  }
+  function closeModal(){
+    modal.removeAttribute("open");
+    document.body.style.overflow="";
+  }
+
+  // ---------- Events ----------
+  // Suche
+  $("#searchForm").addEventListener("submit", (e)=>{
+    e.preventDefault();
+    state.query = $("#q").value;
+    render();
+  });
+  $("#q").addEventListener("input", debounce(e=>{
+    state.query = e.target.value;
+    render();
+  }, 180));
+
+  // Chips
+  $$(".chip").forEach(ch=>{
+    ch.addEventListener("click", ()=>{
+      $$(".chip").forEach(c=>c.setAttribute("aria-pressed","false"));
+      ch.setAttribute("aria-pressed","true");
+      state.chip = ch.dataset.chip;
+      render();
+    });
+  });
+
+  // Karten-Delegation
+  masonry.addEventListener("click", e=>{
+    const openBtn = e.target.closest(".open");
+    const saveBtn = e.target.closest(".save");
+    const card = e.target.closest(".card");
+    if(openBtn || (card && !saveBtn)){
+      const id = (openBtn?.dataset.id) || card.dataset.id;
+      openModal(id);
     }
-
-    // *** Modernisierte Detail-Ansicht ***
-    function renderDetail(recipe){
-      return `
-        <div class="min-h-screen">
-          <div class="relative h-[46vh] min-h-[340px] w-full">
-            <img src="${recipe.image}" alt="${escapeHtml(recipe.title)}" class="absolute inset-0 h-full w-full object-cover" />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
-            <button id="backBtn" class="absolute left-4 top-4 rounded-full glass px-4 py-2 text-sm font-medium text-neutral-100 shadow hover:bg-neutral-900/80">← Zur Übersicht</button>
-            <div class="absolute inset-x-0 -bottom-10 mx-auto w-full max-w-4xl px-4">
-              <div class="glass rounded-2xl p-5 ring-1 ring-white/15 shadow-xl">
-                <div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-                  <div>
-                    <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">${escapeHtml(recipe.title)}</h1>
-                    <div class="mt-2 flex flex-wrap items-center gap-2">
-                      <span class="meta-chip rounded-full px-3 py-1 text-xs md:text-sm text-neutral-100">⏱️ ${recipe.time} Min</span>
-                      <span class="meta-chip rounded-full px-3 py-1 text-xs md:text-sm text-neutral-100">🍽️ ${recipe.portions} Portion${recipe.portions===1?'':'en'}</span>
-                      ${recipe.categories.slice(0,4).map(c=>`<span class="meta-chip rounded-full px-3 py-1 text-xs md:text-sm text-neutral-200">${escapeHtml(c)}</span>`).join('')}
-                    </div>
-                  </div>
-                  <div class="flex items-center gap-2">
-                    <span class="hidden md:inline text-neutral-300 text-sm">Guten Appetit!</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="mx-auto w-full max-w-5xl px-4 pt-16 pb-24">
-            <div class="grid gap-6 md:grid-cols-5">
-              <section class="md:col-span-2">
-                <div class="sticky top-4">
-                  <div class="rounded-2xl bg-neutral-900/70 ring-1 ring-neutral-800 shadow-lg">
-                    <div class="px-5 pt-5 pb-3 border-b border-neutral-800">
-                      <h2 class="text-lg font-semibold">Zutaten</h2>
-                    </div>
-                    <ul class="space-y-2 p-5 text-neutral-200">
-                      ${recipe.ingredients.map(ing=>`<li class="flex items-start gap-2"><span class="mt-1 inline-block h-2 w-2 rounded-full bg-white/40"></span><span>${escapeHtml(ing)}</span></li>`).join('')}
-                    </ul>
-                  </div>
-                </div>
-              </section>
-              <section class="md:col-span-3">
-                <div class="rounded-2xl bg-neutral-900/50 ring-1 ring-neutral-800 shadow-lg">
-                  <div class="px-5 pt-5 pb-3 border-b border-neutral-800">
-                    <h2 class="text-lg font-semibold">Zubereitung</h2>
-                  </div>
-                  <ol class="step-list p-5 space-y-3 list-decimal pl-6 text-neutral-200">
-                    ${recipe.steps.map(s=>`<li>${escapeHtml(s)}</li>`).join('')}
-                  </ol>
-                </div>
-                <div class="mt-6 grid gap-4 md:grid-cols-2">
-                  <div class="rounded-2xl bg-neutral-900/40 ring-1 ring-neutral-800 p-4">
-                    <h3 class="font-semibold mb-2">Tipps</h3>
-                    <p class="text-sm text-neutral-300">Mit frischen Kräutern und etwas Zitrone servieren – bringt extra Frische.</p>
-                  </div>
-                  <div class="rounded-2xl bg-neutral-900/40 ring-1 ring-neutral-800 p-4">
-                    <h3 class="font-semibold mb-2">Allergene / Hinweise</h3>
-                    <p class="text-sm text-neutral-300">Angaben ohne Gewähr – Zutatenliste prüfen und ggf. anpassen.</p>
-                  </div>
-                </div>
-              </section>
-            </div>
-          </div>
-        </div>`;
+    if(saveBtn){
+      const id = saveBtn.dataset.id;
+      toggleSave(id);
+      saveBtn.classList.toggle("saved", state.saved.has(id));
+      saveBtn.innerHTML = `<span class="icon i-heart" aria-hidden="true"></span>${state.saved.has(id) ? 'Gemerkt' : 'Merken'}`;
     }
+  });
 
-    // --- Events ---
-    function bindHomeEvents(){
-      const input = document.getElementById('searchInput');
-      if(input){
-        input.addEventListener('input', e=>{
-          const start = e.target.selectionStart; const end = e.target.selectionEnd;
-          query = e.target.value; renderApp();
-          const ni = document.getElementById('searchInput');
-          if(ni){ ni.focus(); try{ ni.setSelectionRange(start, end); }catch(_){} }
-        });
-      }
-      const resetBtn = document.getElementById('resetBtn');
-      if(resetBtn){ resetBtn.addEventListener('click', ()=>{ query = ""; activeCats = []; renderApp(); }); }
-      document.querySelectorAll('[data-cat]').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const c = btn.getAttribute('data-cat');
-          activeCats = activeCats.includes(c) ? activeCats.filter(x=>x!==c) : [...activeCats, c];
-          renderApp();
-        });
-      });
-      document.querySelectorAll('[data-open]').forEach(card=>{
-        card.addEventListener('click', ()=>{
-          const id = card.getAttribute('data-open');
-          selectedRecipe = ENRICHED_RECIPES.find(r=>r.id===id) || null;
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          renderApp();
-        });
-      });
-      const wrap = document.getElementById('searchWrap');
-      let last = 0;
-      window.addEventListener('scroll', ()=>{
-        const y = window.scrollY || 0;
-        if(!wrap) return;
-        if(y>180 && last<=180) wrap.classList.add('shrink');
-        if(y<=180 && last>180) wrap.classList.remove('shrink');
-        last = y;
-      }, { passive: true });
+  // Keyboard open
+  masonry.addEventListener("keydown", e=>{
+    if(e.key==="Enter"){
+      const card = e.target.closest(".card");
+      if(card) openModal(card.dataset.id);
     }
+  });
 
-    function bindDetailEvents(){
-      const backBtn = document.getElementById('backBtn');
-      if(backBtn){ backBtn.addEventListener('click', ()=>{ selectedRecipe = null; renderApp(); }); }
+  // Modal
+  $("#closeModal").addEventListener("click", closeModal);
+  modal.addEventListener("click", (e)=>{ if(e.target===modal) closeModal(); });
+  document.addEventListener("keydown", (e)=>{ if(e.key==="Escape" && modal.hasAttribute("open")) closeModal(); });
+
+  modalSave.addEventListener("click", ()=>{
+    toggleSave(modalSave.dataset.id);
+    modalSave.textContent = state.saved.has(modalSave.dataset.id) ? "Gemerkt" : "Merken";
+  });
+  modalCopy.addEventListener("click", async ()=>{
+    const url = location.href.split("#")[0] + "#"+ modalSave.dataset.id;
+    try{
+      await navigator.clipboard.writeText(url);
+      modalCopy.textContent = "Kopiert!";
+      setTimeout(()=>modalCopy.textContent="Link kopieren", 1200);
+    }catch(err){
+      alert("Konnte nicht kopieren: " + err);
     }
+  });
 
-    // Start
-    renderApp();
+  // Gemerkt-Liste über Schwebeblase
+  $("#savedBubble").addEventListener("click", showSavedList);
+  function showSavedList(){
+    const ids = [...state.saved];
+    if(ids.length===0){
+      alert("Noch nichts gemerkt. Klicke auf „Merken“ bei einem Rezept.");
+      return;
+    }
+    state.query = ""; $("#q").value="";
+    state.chip = "Alle"; $$(".chip").forEach(c=>c.setAttribute("aria-pressed", c.dataset.chip==="Alle" ? "true":"false"));
+    const savedSet = new Set(ids);
+    masonry.innerHTML = RECIPES.filter(r=>savedSet.has(r.id)).map(cardHTML).join("");
+    emptyMsg.hidden = true;
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  // Save
+  function toggleSave(id){
+    state.saved.has(id) ? state.saved.delete(id) : state.saved.add(id);
+    saveState();
+  }
+
+  // Debounce helper
+  function debounce(fn, ms){ let t; return (...args)=>{ clearTimeout(t); t = setTimeout(()=>fn(...args), ms); }; }
+
+  // Hash-Router
+  window.addEventListener("hashchange", ()=>{
+    const id = location.hash.slice(1);
+    if(id){ openModal(id); }
+  });
+
+  // Init
+  document.documentElement.setAttribute("data-theme", state.theme);
+  render();
+  updateSavedCount();
+  if(location.hash){ openModal(location.hash.slice(1)); }
   </script>
 </body>
 </html>
