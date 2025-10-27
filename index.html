@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="Schnelle, minimalistische Rezepte mit Such- und Filterfunktion." />
   <meta name="color-scheme" content="dark">
+  <!-- iOS: automatische Erkennung/Färbung von Tel/Datum/URL etc. deaktivieren -->
+  <meta name="format-detection" content="telephone=no, date=no, address=no, email=no, url=no">
   <title>Rezepte – Minimal Schwarz</title>
   <style>
     :root{
@@ -96,9 +98,23 @@
       content-visibility: auto;
       contain-intrinsic-size: 300px 225px;
       text-align: left;
+
+      /* iOS Safari: Button-Textfarbe/Font fixen + Tap-Highlight weg */
+      color: var(--text);
+      font: inherit;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .card h3{ margin:10px 12px 12px; font-size:16px; }
+    /* Titel erbt die Card-Farbe */
+    .card h3{
+      margin:10px 12px 12px; font-size:16px;
+      color: inherit;
+    }
+
+    /* Zusätzlicher WebKit-Fallback (nur innerhalb der Card) */
+    .card, .card *{
+      -webkit-text-fill-color: var(--text);
+    }
 
     /* Bild */
     .card img{
@@ -146,7 +162,7 @@
 
     .empty{ text-align:center; color: var(--muted); padding: 40px 10px }
 
-    /* Chips (Pills) im Modal bleiben */
+    /* Chips (Pills) im Modal */
     .pill{ display:inline-block; background:#151515; border:1px solid rgba(255,255,255,.12); padding: 6px 10px; border-radius: 999px; margin-right:8px }
 
     @media (prefers-reduced-motion: reduce){
@@ -169,7 +185,6 @@
       <input id="search" type="search" placeholder="Rezepte oder Zutaten suchen…" autocomplete="off" aria-label="Rezepte oder Zutaten suchen" />
       <button id="clearBtn" type="button" title="Suche löschen" aria-label="Suche löschen">Löschen</button>
     </div>
-    <!-- WIEDER EINGEBAUTE HEADER-CHIPS -->
     <div class="chips-wrap">
       <div class="chips" id="chips" aria-label="Kategorien" role="tablist"></div>
     </div>
@@ -192,23 +207,19 @@
         <div class="meta" id="detailMeta"></div>
         <div id="detailCats"></div>
 
-        <!-- ⏱️ Zubereitungszeit -->
         <div id="timeBlock">
           <h3 class="section" id="timeHeading">⏱️ Zubereitungszeit</h3>
           <ul id="detailTime" aria-labelledby="timeHeading"></ul>
         </div>
 
-        <!-- 🍽️ Portionen -->
         <div id="servingsBlock">
           <h3 class="section" id="servingsHeading">🍽️ Portionen</h3>
           <div id="detailServings"></div>
         </div>
 
-        <!-- 🧂 Zutaten -->
         <h3 class="section" id="ingredientsHeading">🧂 Zutaten</h3>
         <ul id="detailIngredients" aria-labelledby="ingredientsHeading"></ul>
 
-        <!-- 👩‍🍳 Zubereitung -->
         <h3 class="section" id="stepsHeading">👩‍🍳 Zubereitung</h3>
         <ol id="detailSteps" aria-labelledby="stepsHeading"></ol>
       </div>
@@ -688,7 +699,7 @@
       }
     ];
 
-    // Kategorien erzeugen (für Header-Chips)
+    // Kategorien erzeugen (Header-Chips)
     const ALL = 'Alle';
     const CATEGORIES = [ALL, ...Array.from(new Set(RECIPES.flatMap(r => r.categories)))];
 
@@ -704,7 +715,6 @@
     let q = '';
     let lastFocusedCard = null;
 
-    // Header-Chips rendern + Tastaturnavigation
     function renderChips(){
       chips.innerHTML = '';
       CATEGORIES.forEach((cat, idx) => {
@@ -737,7 +747,7 @@
       })
     }
 
-    // Karten-Template: NUR Bild + Titel
+    // Karten-Template: nur Bild + Titel
     function cardTemplate(r){
       const hasImg = !!(r.img && String(r.img).trim());
       return `
@@ -797,7 +807,6 @@
       const r = RECIPES.find(x => x.id===id);
       if(!r) return;
 
-      // Hero-Bild setzen/ausblenden
       const hero = document.querySelector('.detail-hero');
       if(r.img && String(r.img).trim()){
         hero.removeAttribute('hidden');
@@ -811,7 +820,6 @@
 
       detailTitle.textContent = r.title;
       detailMeta.textContent = `Fertig in ca. ${r.time} Min`;
-      // Chips im Hero beibehalten
       detailCats.innerHTML = r.categories.map(c => `<span class="pill">${c}</span>`).join('');
       detailIngredients.innerHTML = r.ingredients.map(i => `<li>${i}</li>`).join('');
       detailSteps.innerHTML = r.steps.map(s => `<li>${s}</li>`).join('');
