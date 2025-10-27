@@ -76,6 +76,31 @@
     @media (min-width: 800px){ .grid{ column-count:3 } }
     @media (min-width: 1200px){ .grid{ column-count:4 } }
 
+        /* Button-Karte komplett „nackt“ machen */
+.card{
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 0;                 /* wichtig: kein Innenabstand */
+  border: 1px solid rgba(255,255,255,.07);
+  border-radius: var(--radius);
+  overflow: hidden;           /* damit die Ecken sauber clippen */
+  background: var(--card);
+  display: inline-block;
+  width: 100%;
+}
+
+/* Bild bündig, ohne Lücke links/rechts */
+.card img{
+  display: block;             /* entfernt Inline-Gap */
+  width: 100%;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;          /* füllt die Breite */
+  object-position: center;
+  /* falls irgendwo Haarlinien sichtbar sind, optional: */
+  /* border-top-left-radius: inherit;
+     border-top-right-radius: inherit; */
     .card{
       break-inside: avoid; display:inline-block; width:100%; margin: 10px 0; background:var(--card);
       border-radius: var(--radius); overflow:hidden; box-shadow: var(--shadow); border:1px solid rgba(255,255,255,.07);
