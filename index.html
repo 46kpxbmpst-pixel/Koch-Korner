@@ -10,8 +10,6 @@
     :root{
       --bg:#0a0a0a;
       --card:#121212;
-      --chip:#1a1a1a;
-      --chip-text:#e6e6e6;
       --text:#f5f5f5;
       --muted:#b3b3b3;
       --accent:#7ee787;
@@ -26,16 +24,13 @@
       font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
 
-    /* Floating header (search + chips) */
+    /* Floating header (nur Suche) */
     .header{
       position: sticky; top:0; z-index:1000;
       padding: 12px clamp(12px, 3vw, 24px);
       transition: transform .35s ease, opacity .35s ease, filter .35s ease;
-      /* FIX: backdrop-filter kann in Mobile Safari Flackern erzeugen. Default: solides Overlay */
       background: rgba(0,0,0,.75);
-      /* Optional weiter aktivieren auf großen Screens, s. Media Query unten */
     }
-    /* Re-enable Blur ab Tabletbreite */
     @media (min-width: 768px){
       .header{
         backdrop-filter: blur(6px);
@@ -60,64 +55,35 @@
     #clearBtn{ display:none }
     .searchbar:has(input:not(:placeholder-shown)) #clearBtn{ display:inline-block }
 
-    /* Chips scroller */
-    .chips-wrap{ margin-top:10px; }
-    .chips{
-      display:flex; gap:8px; padding:8px 2px; overflow-x:auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
-      -webkit-overflow-scrolling: touch; border-radius: 999px; justify-content:flex-start;
-      direction: ltr;
-    }
-    .chips::-webkit-scrollbar{ height:10px }
-    .chips::-webkit-scrollbar-thumb{ background:#2a2a2a; border-radius:999px }
-    .chip{
-      white-space:nowrap; scroll-snap-align: start;
-      border:1px solid rgba(255,255,255,.16); background:var(--chip); color:var(--chip-text);
-      padding:8px 12px; border-radius:999px; cursor:pointer; user-select:none; font-size:14px; opacity:.9;
-    }
-    .chip.active{ background:#202b20; border-color: var(--accent); color: var(--text) }
-
     :focus-visible{ outline: var(--focus); outline-offset: 2px; }
 
-    /* Masonry grid */
-    .grid{ column-gap:14px; padding: 6px clamp(10px, 3vw, 24px) 60px; }
-    @media (min-width: 480px){ .grid{ column-count:2 } }
+    /* Masonry grid – mobil: 2 Spalten, dann 3/4 */
+    .grid{ column-gap:14px; padding: 6px clamp(10px, 3vw, 24px) 60px; column-count:2; }
     @media (min-width: 800px){ .grid{ column-count:3 } }
     @media (min-width: 1200px){ .grid{ column-count:4 } }
 
-    /* --- EINHEITLICHE CARD-DEFINITION (zusammengeführt) --- */
+    /* --- CARD --- */
     .card{
       appearance: none;
-      -webkit-appearance: none;
-      -moz-appearance: none;
       padding: 0;
       display: inline-block;
       width: 100%;
-
-      /* Optik */
       background: var(--card);
       border: 1px solid rgba(255,255,255,.07);
       border-radius: var(--radius);
       overflow: hidden;
       box-shadow: var(--shadow);
       cursor: pointer;
-
-      /* Masonry-Verhalten */
       break-inside: avoid;
       margin: 10px 0;
-
-      /* Performance */
-      /* FIX: content-visibility verursacht in iOS teilweise Flackern – standardmäßig aktiv lassen … */
       content-visibility: auto;
       contain-intrinsic-size: 300px 225px;
-
       text-align: left;
     }
 
     .card h3{ margin:10px 12px 12px; font-size:16px; }
-    .badgebar{ display:flex; gap:8px; padding: 0 12px 12px; flex-wrap:wrap }
-    .badge{ font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); color:var(--muted) }
 
-    /* Bilder stabilisieren */
+    /* Bild */
     .card img{
       display:block;
       width:100%;
@@ -125,25 +91,19 @@
       aspect-ratio: 4/3;
       object-fit: cover;
       object-position: center;
-
-      /* FIX: reduce flicker during decode/compositing on mobile */
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       contain: paint;
-      /* small placeholder bg to avoid flash on dark */
       background:#0f0f0f;
     }
 
-    /* Bild-Wrapper, falls vorhanden */
+    /* Bild-Wrapper */
     .imgwrap{ display:block }
 
-    /* Karten ohne Bild kompakter darstellen */
+    /* Karten ohne Bild kompakter */
     .card.no-img{
-      /* kompaktere intrinsische Größe für Masonry */
       contain-intrinsic-size: 160px 120px;
     }
-
-    /* Wenn keine Bild-Section, nichts reservieren */
     .card.no-img .imgwrap{ display:none }
 
     /* LISTENLABELS OHNE BULLET */
@@ -180,12 +140,9 @@
       .header.hide{ transform:none; opacity:1; filter:none }
     }
 
-    /* --- iOS Safari Fixes --- */
-    /* Kennzeichen für iOS/WebKit */
+    /* iOS Safari Fixes */
     @supports (-webkit-touch-callout: none){
-      /* FIX: content-visibility macht auf iOS gern Ärger → abschalten */
       .card{ content-visibility: visible; contain-intrinsic-size: auto; }
-      /* Sticky + backdrop-filter ist eine bekannte Flicker-Kombi – auf kleinen Screens schon oben aus */
       .modal{ -webkit-backdrop-filter: blur(6px); }
     }
   </style>
@@ -196,9 +153,6 @@
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M15.5 15.5L22 22" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="10.5" cy="10.5" r="7" stroke="currentColor" stroke-width="2"/></svg>
       <input id="search" type="search" placeholder="Rezepte oder Zutaten suchen…" autocomplete="off" aria-label="Rezepte oder Zutaten suchen" />
       <button id="clearBtn" type="button" title="Suche löschen" aria-label="Suche löschen">Löschen</button>
-    </div>
-    <div class="chips-wrap">
-      <div class="chips" id="chips" aria-label="Kategorien" role="tablist"></div>
     </div>
   </header>
 
@@ -243,22 +197,20 @@
   </div>
 
   <script>
-    // (1) Helper ins SCRIPT verschoben
+    // Bild-Error-Handler (entfernt Bildbereich in Karten / blendet Hero im Modal aus)
     function handleImgError(el){
-      // Grid-Karte: Bildbereich entfernen + Karte als 'no-img' markieren
       const card = el.closest('.card');
       if(card){
         card.classList.add('no-img');
         const wrap = card.querySelector('.imgwrap');
         if(wrap) wrap.remove();
       }
-      // Detailansicht: Hero ausblenden
       if(el.id === 'detailImg'){
         document.querySelector('.detail-hero')?.setAttribute('hidden','');
       }
     }
 
-    // --- Deine Rezepte ---
+    // --- Rezepte ---
     const RECIPES = [
       {
         id: 'hackfleisch-sauerkrautsuppe',
@@ -467,7 +419,6 @@
       },
 
       /* ——— Kuchen & Torten ——— */
-
       {
         id: 'gedeckte-apfeltorte',
         title: 'Gedeckte Apfeltorte',
@@ -718,58 +669,19 @@
       }
     ];
 
-    // Kategorien generieren
-    const ALL = 'Alle';
-    const CATEGORIES = [ALL, ...Array.from(new Set(RECIPES.flatMap(r => r.categories)))];
-
     const grid = document.getElementById('grid');
     const empty = document.getElementById('empty');
-    const chips = document.getElementById('chips');
     const search = document.getElementById('search');
     const clearBtn = document.getElementById('clearBtn');
     const header = document.getElementById('header');
     const main = document.querySelector('main');
 
-    let activeCat = ALL;
     let q = '';
     let lastFocusedCard = null;
 
-    function renderChips(){
-      chips.innerHTML = '';
-      CATEGORIES.forEach((cat, idx) => {
-        const b = document.createElement('button');
-        b.type = 'button';
-        b.className = 'chip' + (cat===activeCat ? ' active' : '');
-        b.textContent = cat;
-        b.setAttribute('role','tab');
-        b.setAttribute('aria-selected', cat===activeCat ? 'true' : 'false');
-        b.setAttribute('tabindex', cat===activeCat ? '0' : '-1');
-        b.onclick = () => { activeCat = cat; render(); highlightActive(); };
-        b.addEventListener('keydown', (e) => {
-          if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
-            const dir = e.key === 'ArrowRight' ? 1 : -1;
-            const tabs = [...chips.querySelectorAll('[role="tab"]')];
-            const next = (idx + dir + tabs.length) % tabs.length;
-            tabs[next].focus();
-          }
-        });
-        chips.appendChild(b);
-      });
-      requestAnimationFrame(() => { chips.scrollLeft = 0; });
-    }
-    function highlightActive(){
-      chips.querySelectorAll('.chip').forEach(el => {
-        const isActive = el.textContent===activeCat;
-        el.classList.toggle('active', isActive);
-        el.setAttribute('aria-selected', isActive ? 'true' : 'false');
-        el.setAttribute('tabindex', isActive ? '0' : '-1');
-      })
-    }
-
-    // (2) robusteres Template mit hasImg-Check
+    // Karten-Template: NUR Bild + Titel (keine Badges/Chips)
     function cardTemplate(r){
-      const cats = r.categories.map(c => `<span class="badge">${c}</span>`).join('');
-      const hasImg = !!(r.img && String(r.img).trim()); // existiert & nicht leer?
+      const hasImg = !!(r.img && String(r.img).trim());
       return `
         <button class="card${hasImg ? '' : ' no-img'}" data-id="${r.id}" aria-label="${r.title}" role="listitem">
           ${hasImg ? `
@@ -780,7 +692,6 @@
             </div>
           ` : ``}
           <h3>${r.title}</h3>
-          <div class="badgebar">${cats}</div>
         </button>
       `;
     }
@@ -788,8 +699,6 @@
     function render(){
       const words = q.toLowerCase().split(/\s+/).filter(Boolean);
       const list = RECIPES.filter(r => {
-        const catOk = activeCat===ALL || r.categories.includes(activeCat);
-        if(!catOk) return false;
         if(words.length===0) return true;
         const hay = (r.title + ' ' + r.ingredients.join(' ')).toLowerCase();
         return words.every(w => hay.includes(w));
@@ -827,15 +736,25 @@
     function openRecipe(id){
       const r = RECIPES.find(x => x.id===id);
       if(!r) return;
-      detailImg.src = r.img;
-      detailImg.alt = r.title;
+
+      // Detail-Hero setzen/ausblenden
+      const hero = document.querySelector('.detail-hero');
+      if(r.img && String(r.img).trim()){
+        hero.removeAttribute('hidden');
+        detailImg.src = r.img;
+        detailImg.alt = r.title;
+      } else {
+        detailImg.removeAttribute('src');
+        detailImg.alt = '';
+        hero.setAttribute('hidden','');
+      }
+
       detailTitle.textContent = r.title;
       detailMeta.textContent = `Fertig in ca. ${r.time} Min`;
       detailCats.innerHTML = r.categories.map(c => `<span class="pill">${c}</span>`).join('');
       detailIngredients.innerHTML = r.ingredients.map(i => `<li>${i}</li>`).join('');
       detailSteps.innerHTML = r.steps.map(s => `<li>${s}</li>`).join('');
 
-      // ⏱️ Zubereitungszeit (optional)
       if (Array.isArray(r.timeDetail) && r.timeDetail.length){
         detailTime.innerHTML = r.timeDetail.map(t => `<li>${t}</li>`).join('');
         timeBlock.hidden = false;
@@ -844,7 +763,6 @@
         timeBlock.hidden = true;
       }
 
-      // 🍽️ Portionen (optional)
       if (r.servings){
         detailServings.textContent = r.servings;
         servingsBlock.hidden = false;
@@ -857,7 +775,6 @@
       modal.setAttribute('aria-hidden','false');
       setBackgroundInert(true);
 
-      // Focus Trap
       const focusables = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
       trapFirst = focusables[0];
       trapLast  = focusables[focusables.length - 1];
@@ -915,9 +832,7 @@
     }, { passive:true });
 
     // Init
-    renderChips();
     render();
   </script>
 </body>
 </html>
-
