@@ -31,8 +31,16 @@
       position: sticky; top:0; z-index:1000;
       padding: 12px clamp(12px, 3vw, 24px);
       transition: transform .35s ease, opacity .35s ease, filter .35s ease;
-      backdrop-filter: blur(6px);
-      background: linear-gradient(180deg, rgba(0,0,0,.65), rgba(0,0,0,.35), rgba(0,0,0,0));
+      /* FIX: backdrop-filter kann in Mobile Safari Flackern erzeugen. Default: solides Overlay */
+      background: rgba(0,0,0,.75);
+      /* Optional weiter aktivieren auf großen Screens, s. Media Query unten */
+    }
+    /* Re-enable Blur ab Tabletbreite */
+    @media (min-width: 768px){
+      .header{
+        backdrop-filter: blur(6px);
+        background: linear-gradient(180deg, rgba(0,0,0,.65), rgba(0,0,0,.35), rgba(0,0,0,0));
+      }
     }
     .header.hide{ transform: translateY(-100%); opacity:0; filter: blur(2px); }
 
@@ -76,67 +84,59 @@
     @media (min-width: 800px){ .grid{ column-count:3 } }
     @media (min-width: 1200px){ .grid{ column-count:4 } }
 
-
-/* --- EINHEITLICHE CARD-DEFINITION --- */
-.card{
-  appearance: none;
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  padding: 0;
-  display: inline-block;
-  width: 100%;
-
-  /* Optik */
-  background: var(--card);
-  border: 1px solid rgba(255,255,255,.07);
-  border-radius: var(--radius);
-  overflow: hidden;
-  box-shadow: var(--shadow);
-  cursor: pointer;
-  transform: translateZ(0);
-
-  /* Masonry-Verhalten */
-  break-inside: avoid;
-  margin: 10px 0;
-
-  /* Performance */
-  content-visibility: auto;
-  contain-intrinsic-size: 300px 225px;
-  text-align: left;
-}
-.card img{
-  display:block;
-  width:100%;
-  height:auto;
-  aspect-ratio: 4/3;
-  object-fit: cover;
-  object-position: center;
-}
-
-/* --- LISTENLABELS OHNE BULLET --- */
-ul li.no-bullet{
-  list-style: none;
-  margin-left: 0;
-  padding-left: 0;
-}
-ul li.no-bullet strong{
-  color: var(--text);
-}
-
-
-
-
+    /* --- EINHEITLICHE CARD-DEFINITION (zusammengeführt) --- */
     .card{
-      break-inside: avoid; display:inline-block; width:100%; margin: 10px 0; background:var(--card);
-      border-radius: var(--radius); overflow:hidden; box-shadow: var(--shadow); border:1px solid rgba(255,255,255,.07);
-      cursor:pointer; transform: translateZ(0);
-      content-visibility:auto; contain-intrinsic-size: 300px 225px;
-      text-align:left;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      padding: 0;
+      display: inline-block;
+      width: 100%;
+
+      /* Optik */
+      background: var(--card);
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      cursor: pointer;
+
+      /* Masonry-Verhalten */
+      break-inside: avoid;
+      margin: 10px 0;
+
+      /* Performance */
+      /* FIX: content-visibility verursacht in iOS teilweise Flackern – standardmäßig aktiv lassen … */
+      content-visibility: auto;
+      contain-intrinsic-size: 300px 225px;
+
+      text-align: left;
     }
-    .card img{ width:100%; display:block; aspect-ratio: 4/3; object-fit: cover; }
+
     .card h3{ margin:10px 12px 12px; font-size:16px; }
     .badgebar{ display:flex; gap:8px; padding: 0 12px 12px; flex-wrap:wrap }
     .badge{ font-size:12px; padding:4px 8px; border-radius:999px; border:1px solid rgba(255,255,255,.12); color:var(--muted) }
+
+    /* Bilder stabilisieren */
+    .card img{
+      display:block;
+      width:100%;
+      height:auto;
+      aspect-ratio: 4/3;
+      object-fit: cover;
+      object-position: center;
+
+      /* FIX: reduce flicker during decode/compositing on mobile */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      contain: paint;
+      /* small placeholder bg to avoid flash on dark */
+      background:#0f0f0f;
+    }
+
+    /* LISTENLABELS OHNE BULLET */
+    ul li.no-bullet{ list-style: none; margin-left: 0; padding-left: 0; }
+    ul li.no-bullet strong{ color: var(--text); }
 
     /* Fullscreen modal */
     .modal{ position: fixed; inset:0; display:none; align-items:stretch; background: rgba(0,0,0,.65); backdrop-filter: blur(6px); z-index:1100 }
@@ -149,7 +149,7 @@ ul li.no-bullet strong{
     @keyframes pop{ from{ transform: scale(.98); opacity:.0 } to{ transform: scale(1); opacity:1 } }
 
     .detail-hero{ position:relative }
-    .detail-hero img{ width:100%; height: clamp(220px, 45vh, 420px); object-fit: cover; display:block }
+    .detail-hero img{ width:100%; height: clamp(220px, 45vh, 420px); object-fit: cover; display:block; backface-visibility: hidden; -webkit-backface-visibility: hidden; contain: paint; background:#0f0f0f; }
     .close{ position:absolute; top:12px; right:12px; padding:8px 10px; border-radius:999px; border:1px solid rgba(255,255,255,.2); background: rgba(0,0,0,.45); color:#fff; cursor:pointer }
 
     .detail-body{ padding: 18px }
@@ -166,6 +166,15 @@ ul li.no-bullet strong{
       .header{ transition:none }
       .sheet{ animation:none }
       .header.hide{ transform:none; opacity:1; filter:none }
+    }
+
+    /* --- iOS Safari Fixes --- */
+    /* Kennzeichen für iOS/WebKit */
+    @supports (-webkit-touch-callout: none){
+      /* FIX: content-visibility macht auf iOS gern Ärger → abschalten */
+      .card{ content-visibility: visible; contain-intrinsic-size: auto; }
+      /* Sticky + backdrop-filter ist eine bekannte Flicker-Kombi – auf kleinen Screens schon oben aus */
+      .modal{ -webkit-backdrop-filter: blur(6px); }
     }
   </style>
 </head>
@@ -231,9 +240,9 @@ ul li.no-bullet strong{
         time: 90,
         servings: 'Für 4 Personen',
         timeDetail: [
-          '• Aktive Zeit: ca. 20 Minuten',
-          '• Kochzeit: ca. 60–90 Minuten',
-          '• Gesamt: ca. 1 Stunde 30 Minuten'
+          'Aktive Zeit: ca. 20 Minuten',
+          'Kochzeit: ca. 60–90 Minuten',
+          'Gesamt: ca. 1 Stunde 30 Minuten'
         ],
         img: 'Hackfleischsauerkraut Suppe.png',
         ingredients: [
@@ -267,9 +276,9 @@ ul li.no-bullet strong{
         time: 50,
         servings: 'Für 2–3 Personen',
         timeDetail: [
-          '• Aktive Zeit: ca. 25 Minuten',
-          '• Backzeit: ca. 25 Minuten',
-          '• Gesamt: ca. 50 Minuten'
+          'Aktive Zeit: ca. 25 Minuten',
+          'Backzeit: ca. 25 Minuten',
+          'Gesamt: ca. 50 Minuten'
         ],
         img: 'https://images.unsplash.com/photo-1567188040759-fb8a883dc6d8?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -301,9 +310,9 @@ ul li.no-bullet strong{
         time: 30,
         servings: 'Für 4 Personen',
         timeDetail: [
-          '• Aktive Zeit: ca. 10 Minuten',
-          '• Kochzeit: ca. 20 Minuten',
-          '• Gesamt: ca. 30 Minuten'
+          'Aktive Zeit: ca. 10 Minuten',
+          'Kochzeit: ca. 20 Minuten',
+          'Gesamt: ca. 30 Minuten'
         ],
         img: 'https://images.unsplash.com/photo-1604908812898-600a0e3300da?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -326,9 +335,9 @@ ul li.no-bullet strong{
         time: 30,
         servings: 'Für 4 Personen',
         timeDetail: [
-          '• Aktive Zeit: ca. 20 Minuten',
-          '• Kochzeit: ca. 10 Minuten',
-          '• Gesamt: ca. 30 Minuten'
+          'Aktive Zeit: ca. 20 Minuten',
+          'Kochzeit: ca. 10 Minuten',
+          'Gesamt: ca. 30 Minuten'
         ],
         img: 'https://images.unsplash.com/photo-1615486364363-7d3a9a191714?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -352,8 +361,8 @@ ul li.no-bullet strong{
         time: 30,
         servings: 'Für 3 Portionen',
         timeDetail: [
-          '• Aktive Zeit: ca. 25 Minuten',
-          '• Gesamt: ca. 30 Minuten'
+          'Aktive Zeit: ca. 25 Minuten',
+          'Gesamt: ca. 30 Minuten'
         ],
         img: 'https://images.unsplash.com/photo-1516100882582-96c3a05fe590?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -382,9 +391,9 @@ ul li.no-bullet strong{
         time: 60,
         servings: 'Für 4 Personen',
         timeDetail: [
-          '• Aktive Zeit: ca. 20 Minuten',
-          '• Kochzeit: ca. 40 Minuten',
-          '• Gesamt: ca. 1 Stunde'
+          'Aktive Zeit: ca. 20 Minuten',
+          'Kochzeit: ca. 40 Minuten',
+          'Gesamt: ca. 1 Stunde'
         ],
         img: 'https://images.unsplash.com/photo-1543332164-6e82f355bad8?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -412,9 +421,9 @@ ul li.no-bullet strong{
         time: 25,
         servings: '6 Brötchenhälften',
         timeDetail: [
-          '• Aktive Zeit: ca. 10 Minuten',
-          '• Backzeit: ca. 15 Minuten',
-          '• Gesamt: ca. 25 Minuten'
+          'Aktive Zeit: ca. 10 Minuten',
+          'Backzeit: ca. 15 Minuten',
+          'Gesamt: ca. 25 Minuten'
         ],
         img: 'https://images.unsplash.com/photo-1568127860552-9b9b9a46b21b?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -439,9 +448,9 @@ ul li.no-bullet strong{
         time: 95,
         servings: 'Für eine Springform (26 cm Ø)',
         timeDetail: [
-          '• Aktive Zeit: ca. 25 Minuten',
-          '• Backzeit: ca. 70 Minuten',
-          '• Gesamt: ca. 1 Stunde 35 Minuten'
+          'Aktive Zeit: ca. 25 Minuten',
+          'Backzeit: ca. 70 Minuten',
+          'Gesamt: ca. 1 Stunde 35 Minuten'
         ],
         img: 'https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -471,9 +480,9 @@ ul li.no-bullet strong{
         time: 40,
         servings: 'Für 1 Blech',
         timeDetail: [
-          '• Aktive Zeit: ca. 20 Minuten',
-          '• Backzeit: ca. 20 Minuten',
-          '• Gesamt: ca. 40 Minuten'
+          'Aktive Zeit: ca. 20 Minuten',
+          'Backzeit: ca. 20 Minuten',
+          'Gesamt: ca. 40 Minuten'
         ],
         img: 'https://images.unsplash.com/photo-1601972599720-b1e4f44b6cc0?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -505,10 +514,10 @@ ul li.no-bullet strong{
         time: 150,
         servings: 'Für eine Springform (26 cm Ø)',
         timeDetail: [
-          '• Aktive Zeit: ca. 25 Minuten',
-          '• Kühlzeit: ca. 1 Stunde',
-          '• Backzeit: ca. 50–60 Minuten',
-          '• Gesamt: ca. 2½ Stunden'
+          'Aktive Zeit: ca. 25 Minuten',
+          'Kühlzeit: ca. 1 Stunde',
+          'Backzeit: ca. 50–60 Minuten',
+          'Gesamt: ca. 2½ Stunden'
         ],
         img: 'https://images.unsplash.com/photo-1551024709-8f23befc6cf7?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -544,9 +553,9 @@ ul li.no-bullet strong{
         time: 55,
         servings: 'Für 1 Torte',
         timeDetail: [
-          '• Aktive Zeit: ca. 25 Minuten',
-          '• Backzeit: ca. 30 Minuten',
-          '• Gesamt: ca. 55 Minuten'
+          'Aktive Zeit: ca. 25 Minuten',
+          'Backzeit: ca. 30 Minuten',
+          'Gesamt: ca. 55 Minuten'
         ],
         img: 'https://images.unsplash.com/photo-1505252585461-04db1eb84625?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -577,10 +586,10 @@ ul li.no-bullet strong{
         time: 90,
         servings: 'Für 1 Blech',
         timeDetail: [
-          '• Aktive Zeit: ca. 30 Minuten',
-          '• Gehzeit: ca. 30 Minuten',
-          '• Backzeit: ca. 30 Minuten',
-          '• Gesamt: ca. 1½ Stunden'
+          'Aktive Zeit: ca. 30 Minuten',
+          'Gehzeit: ca. 30 Minuten',
+          'Backzeit: ca. 30 Minuten',
+          'Gesamt: ca. 1½ Stunden'
         ],
         img: 'https://images.unsplash.com/photo-1519751138087-5a3a4c5a6117?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -614,9 +623,9 @@ ul li.no-bullet strong{
         time: 80,
         servings: 'Für 1 Gugelhupfform',
         timeDetail: [
-          '• Aktive Zeit: ca. 20 Minuten',
-          '• Backzeit: ca. 60 Minuten',
-          '• Gesamt: ca. 1 Stunde 20 Minuten'
+          'Aktive Zeit: ca. 20 Minuten',
+          'Backzeit: ca. 60 Minuten',
+          'Gesamt: ca. 1 Stunde 20 Minuten'
         ],
         img: 'https://images.unsplash.com/photo-1603052875338-7f6c2a2a3b7b?q=80&w=1200&auto=format&fit=crop',
         ingredients: [
@@ -646,10 +655,10 @@ ul li.no-bullet strong{
         time: 135,
         servings: 'Für 1 Torte (26 cm Ø)',
         timeDetail: [
-          '• Aktive Zeit: ca. 45 Minuten',
-          '• Backzeit: ca. 30 Minuten',
-          '• Kühlzeit: ca. 1 Stunde',
-          '• Gesamt: ca. 2 Stunden 15 Minuten'
+          'Aktive Zeit: ca. 45 Minuten',
+          'Backzeit: ca. 30 Minuten',
+          'Kühlzeit: ca. 1 Stunde',
+          'Gesamt: ca. 2 Stunden 15 Minuten'
         ],
         img: 'Stachelbeertorte.png',
         ingredients: [
@@ -734,7 +743,7 @@ ul li.no-bullet strong{
       const cats = r.categories.map(c => `<span class="badge">${c}</span>`).join('');
       return `
         <button class="card" data-id="${r.id}" aria-label="${r.title}" role="listitem">
-          <img loading="lazy" decoding="async" src="${r.img}" alt="${r.title}" />
+          <img loading="lazy" decoding="async" fetchpriority="low" src="${r.img}" alt="${r.title}" />
           <h3>${r.title}</h3>
           <div class="badgebar">${cats}</div>
         </button>
@@ -876,3 +885,4 @@ ul li.no-bullet strong{
   </script>
 </body>
 </html>
+
