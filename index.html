@@ -10,6 +10,8 @@
     :root{
       --bg:#0a0a0a;
       --card:#121212;
+      --chip:#1a1a1a;
+      --chip-text:#e6e6e6;
       --text:#f5f5f5;
       --muted:#b3b3b3;
       --accent:#7ee787;
@@ -24,7 +26,7 @@
       font:16px/1.5 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
     }
 
-    /* Floating header (nur Suche) */
+    /* Floating header (Suche + Chips) */
     .header{
       position: sticky; top:0; z-index:1000;
       padding: 12px clamp(12px, 3vw, 24px);
@@ -54,6 +56,21 @@
     }
     #clearBtn{ display:none }
     .searchbar:has(input:not(:placeholder-shown)) #clearBtn{ display:inline-block }
+
+    /* Chips scroller (Header-Filter) */
+    .chips-wrap{ margin-top:10px; }
+    .chips{
+      display:flex; gap:8px; padding:8px 2px; overflow-x:auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
+      -webkit-overflow-scrolling: touch; border-radius: 999px; justify-content:flex-start; direction:ltr;
+    }
+    .chips::-webkit-scrollbar{ height:10px }
+    .chips::-webkit-scrollbar-thumb{ background:#2a2a2a; border-radius:999px }
+    .chip{
+      white-space:nowrap; scroll-snap-align:start;
+      border:1px solid rgba(255,255,255,.16); background:var(--chip); color:var(--chip-text);
+      padding:8px 12px; border-radius:999px; cursor:pointer; user-select:none; font-size:14px; opacity:.9;
+    }
+    .chip.active{ background:#202b20; border-color: var(--accent); color: var(--text) }
 
     :focus-visible{ outline: var(--focus); outline-offset: 2px; }
 
@@ -106,11 +123,7 @@
     }
     .card.no-img .imgwrap{ display:none }
 
-    /* LISTENLABELS OHNE BULLET */
-    ul li.no-bullet{ list-style: none; margin-left: 0; padding-left: 0; }
-    ul li.no-bullet strong{ color: var(--text); }
-
-    /* Fullscreen modal */
+    /* Modal */
     .modal{ position: fixed; inset:0; display:none; align-items:stretch; background: rgba(0,0,0,.65); backdrop-filter: blur(6px); z-index:1100 }
     .modal.open{ display:flex }
     .sheet{
@@ -132,6 +145,8 @@
     ol{ margin: 8px 0 20px 18px }
 
     .empty{ text-align:center; color: var(--muted); padding: 40px 10px }
+
+    /* Chips (Pills) im Modal bleiben */
     .pill{ display:inline-block; background:#151515; border:1px solid rgba(255,255,255,.12); padding: 6px 10px; border-radius: 999px; margin-right:8px }
 
     @media (prefers-reduced-motion: reduce){
@@ -154,6 +169,10 @@
       <input id="search" type="search" placeholder="Rezepte oder Zutaten suchen…" autocomplete="off" aria-label="Rezepte oder Zutaten suchen" />
       <button id="clearBtn" type="button" title="Suche löschen" aria-label="Suche löschen">Löschen</button>
     </div>
+    <!-- WIEDER EINGEBAUTE HEADER-CHIPS -->
+    <div class="chips-wrap">
+      <div class="chips" id="chips" aria-label="Kategorien" role="tablist"></div>
+    </div>
   </header>
 
   <main>
@@ -165,7 +184,7 @@
   <div class="modal" id="modal" aria-hidden="true">
     <article class="sheet" role="dialog" aria-modal="true" aria-labelledby="detailTitle" aria-describedby="detailMeta">
       <div class="detail-hero">
-        <img id="detailImg" alt="" />
+        <img id="detailImg" alt="" onerror="handleImgError(this)" />
         <button class="close" id="closeModal" aria-label="Schließen">✕</button>
       </div>
       <div class="detail-body">
@@ -197,7 +216,7 @@
   </div>
 
   <script>
-    // Bild-Error-Handler (entfernt Bildbereich in Karten / blendet Hero im Modal aus)
+    // Bild-Error-Handler
     function handleImgError(el){
       const card = el.closest('.card');
       if(card){
@@ -210,7 +229,7 @@
       }
     }
 
-    // --- Rezepte ---
+    // --- Deine Rezepte ---
     const RECIPES = [
       {
         id: 'hackfleisch-sauerkrautsuppe',
@@ -669,17 +688,56 @@
       }
     ];
 
+    // Kategorien erzeugen (für Header-Chips)
+    const ALL = 'Alle';
+    const CATEGORIES = [ALL, ...Array.from(new Set(RECIPES.flatMap(r => r.categories)))];
+
     const grid = document.getElementById('grid');
     const empty = document.getElementById('empty');
+    const chips = document.getElementById('chips');
     const search = document.getElementById('search');
     const clearBtn = document.getElementById('clearBtn');
     const header = document.getElementById('header');
     const main = document.querySelector('main');
 
+    let activeCat = ALL;
     let q = '';
     let lastFocusedCard = null;
 
-    // Karten-Template: NUR Bild + Titel (keine Badges/Chips)
+    // Header-Chips rendern + Tastaturnavigation
+    function renderChips(){
+      chips.innerHTML = '';
+      CATEGORIES.forEach((cat, idx) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'chip' + (cat===activeCat ? ' active' : '');
+        b.textContent = cat;
+        b.setAttribute('role','tab');
+        b.setAttribute('aria-selected', cat===activeCat ? 'true' : 'false');
+        b.setAttribute('tabindex', cat===activeCat ? '0' : '-1');
+        b.onclick = () => { activeCat = cat; render(); highlightActive(); };
+        b.addEventListener('keydown', (e) => {
+          if(e.key === 'ArrowRight' || e.key === 'ArrowLeft'){
+            const dir = e.key === 'ArrowRight' ? 1 : -1;
+            const tabs = [...chips.querySelectorAll('[role="tab"]')];
+            const next = (idx + dir + tabs.length) % tabs.length;
+            tabs[next].focus();
+          }
+        });
+        chips.appendChild(b);
+      });
+      requestAnimationFrame(() => { chips.scrollLeft = 0; });
+    }
+    function highlightActive(){
+      chips.querySelectorAll('.chip').forEach(el => {
+        const isActive = el.textContent===activeCat;
+        el.classList.toggle('active', isActive);
+        el.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        el.setAttribute('tabindex', isActive ? '0' : '-1');
+      })
+    }
+
+    // Karten-Template: NUR Bild + Titel
     function cardTemplate(r){
       const hasImg = !!(r.img && String(r.img).trim());
       return `
@@ -699,6 +757,8 @@
     function render(){
       const words = q.toLowerCase().split(/\s+/).filter(Boolean);
       const list = RECIPES.filter(r => {
+        const catOk = activeCat===ALL || r.categories.includes(activeCat);
+        if(!catOk) return false;
         if(words.length===0) return true;
         const hay = (r.title + ' ' + r.ingredients.join(' ')).toLowerCase();
         return words.every(w => hay.includes(w));
@@ -737,7 +797,7 @@
       const r = RECIPES.find(x => x.id===id);
       if(!r) return;
 
-      // Detail-Hero setzen/ausblenden
+      // Hero-Bild setzen/ausblenden
       const hero = document.querySelector('.detail-hero');
       if(r.img && String(r.img).trim()){
         hero.removeAttribute('hidden');
@@ -751,6 +811,7 @@
 
       detailTitle.textContent = r.title;
       detailMeta.textContent = `Fertig in ca. ${r.time} Min`;
+      // Chips im Hero beibehalten
       detailCats.innerHTML = r.categories.map(c => `<span class="pill">${c}</span>`).join('');
       detailIngredients.innerHTML = r.ingredients.map(i => `<li>${i}</li>`).join('');
       detailSteps.innerHTML = r.steps.map(s => `<li>${s}</li>`).join('');
@@ -832,6 +893,7 @@
     }, { passive:true });
 
     // Init
+    renderChips();
     render();
   </script>
 </body>
