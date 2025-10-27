@@ -134,6 +134,18 @@
       background:#0f0f0f;
     }
 
+    /* Bild-Wrapper, falls vorhanden */
+    .imgwrap{ display:block }
+
+    /* Karten ohne Bild kompakter darstellen */
+    .card.no-img{
+      /* kompaktere intrinsische Größe für Masonry */
+      contain-intrinsic-size: 160px 120px;
+    }
+
+    /* Wenn keine Bild-Section, nichts reservieren */
+    .card.no-img .imgwrap{ display:none }
+
     /* LISTENLABELS OHNE BULLET */
     ul li.no-bullet{ list-style: none; margin-left: 0; padding-left: 0; }
     ul li.no-bullet strong{ color: var(--text); }
@@ -231,6 +243,21 @@
   </div>
 
   <script>
+    // (1) Helper ins SCRIPT verschoben
+    function handleImgError(el){
+      // Grid-Karte: Bildbereich entfernen + Karte als 'no-img' markieren
+      const card = el.closest('.card');
+      if(card){
+        card.classList.add('no-img');
+        const wrap = card.querySelector('.imgwrap');
+        if(wrap) wrap.remove();
+      }
+      // Detailansicht: Hero ausblenden
+      if(el.id === 'detailImg'){
+        document.querySelector('.detail-hero')?.setAttribute('hidden','');
+      }
+    }
+
     // --- Deine Rezepte ---
     const RECIPES = [
       {
@@ -739,11 +766,19 @@
       })
     }
 
+    // (2) robusteres Template mit hasImg-Check
     function cardTemplate(r){
       const cats = r.categories.map(c => `<span class="badge">${c}</span>`).join('');
+      const hasImg = !!(r.img && String(r.img).trim()); // existiert & nicht leer?
       return `
-        <button class="card" data-id="${r.id}" aria-label="${r.title}" role="listitem">
-          <img loading="lazy" decoding="async" fetchpriority="low" src="${r.img}" alt="${r.title}" />
+        <button class="card${hasImg ? '' : ' no-img'}" data-id="${r.id}" aria-label="${r.title}" role="listitem">
+          ${hasImg ? `
+            <div class="imgwrap">
+              <img loading="lazy" decoding="async" fetchpriority="low"
+                   src="${r.img}" alt="${r.title}"
+                   onerror="handleImgError(this)" />
+            </div>
+          ` : ``}
           <h3>${r.title}</h3>
           <div class="badgebar">${cats}</div>
         </button>
